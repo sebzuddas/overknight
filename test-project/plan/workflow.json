@@ -1,36 +1,12 @@
 {
   "steps": [
     {
-      "id": "check-arch",
-      "name": "Check Architectures",
-      "prompt": "Review the architecture diagrams in docs/architectures/ for relevant diagrams.",
-      "enabled": true
-    },
-    {
-      "id": "write-tests",
-      "name": "Write Unit Tests",
-      "prompt": "Write failing unit tests for the feature before implementing.",
-      "enabled": true
-    },
-    {
-      "id": "implement",
-      "name": "Implement Feature",
-      "prompt": "Implement the feature to make the tests pass.",
-      "enabled": true
-    },
-    {
-      "id": "lint",
-      "name": "Run Linters",
-      "prompt": "Run linting, type checking, and fix any issues.",
-      "enabled": true
-    },
-    {
-      "id": "update-docs",
-      "name": "Update Documentation",
-      "prompt": "Update relevant documentation and architecture diagrams based on the changes made.",
+      "id": "step-1",
+      "name": "Test Step",
+      "prompt": "Say hello",
       "enabled": true
     }
   ],
-  "agentCommand": "claude -p \"{{prompt}}\"",
+  "agentCommand": "echo \"Agent Output: {{prompt}}\"",
   "workingDirectory": "/Users/sebastianozuddas/Programming/overknight/test-project"
 }
