@@ -18,10 +18,10 @@
           "title": "Rename the task board to be the 'backlog'",
           "description": "",
           "priority": 3,
-          "status": "in-progress",
+          "status": "failed",
           "branch": "main",
           "createdAt": "2026-01-29T16:23:23.027Z",
-          "completedAt": "2026-01-29T19:53:53.422Z"
+          "completedAt": "2026-01-29T20:03:02.434Z"
         },
         {
           "id": "task-1769703830018",
