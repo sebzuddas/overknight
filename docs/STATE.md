@@ -1,13 +1,9 @@
 # Project State
 
-- Task: Rename the task board to be the 'backlog'
-- Status: Completed
+- Task: Implement the draw.io editor in the architectures window.
+- Status: In Progress
 - Last Updated: Thursday, January 29, 2026
 
 ## Workflow Step: Check Architectures
-- Status: Completed. No architecture diagrams found in `docs/architectures/`.
-- Last Updated: Thursday, January 29, 2026
-
-## Task: Implement the draw.io editor in the architectures window
-- Status: Editor implemented, API and UI routes created.
+- Status: Completed. Found `sample-architecture.drawio` in `docs/architectures/`.
 - Last Updated: Thursday, January 29, 2026
