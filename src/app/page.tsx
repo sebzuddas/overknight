@@ -15,7 +15,7 @@ export default function Home() {
   const { tasksData, isRunning, projectPath } = useProject();
   const [activeTab, setActiveTab] = useState<Tab>('tasks');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const tabs: { id: Tab; label: string }[] = [{ id: 'tasks', label: 'Tasks' }, { id: 'architectures', label: 'Architectures' }, { id: 'workflow', label: 'Workflow' }];
+  const tabs: { id: Tab; label: string }[] = [{ id: 'tasks', label: 'Backlog' }, { id: 'architectures', label: 'Architectures' }, { id: 'workflow', label: 'Workflow' }];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">

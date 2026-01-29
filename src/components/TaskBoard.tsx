@@ -32,7 +32,7 @@ export function TaskBoard() {
         <div className="flex h-[calc(100vh-8rem)] gap-6">
             <div className="flex-1 space-y-6 overflow-auto">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold">Task Board</h2>
+                    <h2 className="text-2xl font-bold">Backlog</h2>
                     <button
                         onClick={() => setNewConfirmEpic(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-sm font-medium"
