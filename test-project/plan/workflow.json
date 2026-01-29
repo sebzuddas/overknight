@@ -1,0 +1,36 @@
+{
+  "steps": [
+    {
+      "id": "check-arch",
+      "name": "Check Architectures",
+      "prompt": "Review the architecture diagrams in docs/architectures/ to understand the system design relevant to this task. List any dependencies or constraints.",
+      "enabled": true
+    },
+    {
+      "id": "write-tests",
+      "name": "Write Unit Tests",
+      "prompt": "Write failing unit tests for the feature before implementing. Tests should cover the expected behavior described in the task.",
+      "enabled": true
+    },
+    {
+      "id": "implement",
+      "name": "Implement Feature",
+      "prompt": "Implement the feature to make the tests pass. Follow existing code patterns and conventions.",
+      "enabled": true
+    },
+    {
+      "id": "lint",
+      "name": "Run Linters",
+      "prompt": "Run linting, type checking, and fix any issues. Ensure code quality standards are met.",
+      "enabled": true
+    },
+    {
+      "id": "update-docs",
+      "name": "Update Documentation",
+      "prompt": "Update relevant documentation and architecture diagrams based on the changes made. Add comments where necessary.",
+      "enabled": true
+    }
+  ],
+  "agentCommand": "claude -p \"{{prompt}}\"",
+  "workingDirectory": "/Users/sebastianozuddas/Programming/overknight/test-project"
+}
