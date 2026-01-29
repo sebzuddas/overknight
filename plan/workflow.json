@@ -31,6 +31,11 @@
       "enabled": true
     }
   ],
-  "agentCommand": "gemini -p \"{{prompt}}\"",
-  "workingDirectory": "/Users/sebastianozuddas/Programming/overknight/"
+  "agentCommand": "gemini -p \"{{prompt}}\" --yolo",
+  "workingDirectory": "/Users/sebastianozuddas/Programming/overknight/",
+  "permissions": {
+    "allowShell": true,
+    "allowGit": true,
+    "requireApproval": false
+  }
 }
