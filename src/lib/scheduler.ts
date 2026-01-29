@@ -82,9 +82,34 @@ export class Scheduler {
         let allSuccessful = true;
         this.currentRunner = createAgentRunner({ projectPath: this.projectPath, onError: this.options.onError });
 
+        const path = require('path');
+        const fs = require('fs');
+        const tasksJsonPath = path.join(this.projectPath, 'plan/tasks.json');
+
         for (const task of tasksToRun) {
             try {
+                // Setup watcher for this specific task
+                const watcher = fs.watch(tasksJsonPath, async (eventType: string) => {
+                    if (eventType === 'change') {
+                        const currentTasks = await readTasks(this.projectPath);
+                        if (!currentTasks) return;
+
+                        // Find the current task
+                        let foundTask: Task | undefined;
+                        for (const epic of currentTasks.epics) {
+                            const t = epic.tasks.find(t => t.id === task.id);
+                            if (t) { foundTask = t; break; }
+                        }
+
+                        if (foundTask && foundTask.status === 'completed' && this.currentRunner) {
+                            console.log(`[Scheduler] Task ${task.id} marked as completed externally. Stopping runner.`);
+                            this.currentRunner.cancel();
+                        }
+                    }
+                });
+
                 const result = await this.currentRunner.runTask(task);
+                watcher.close(); // Clean up watcher
                 if (!result.success) allSuccessful = false;
             } catch (error) {
                 allSuccessful = false;
