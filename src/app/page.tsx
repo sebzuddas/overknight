@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Moon, Sun, Sword, Menu, X } from 'lucide-react';
 import { ProjectSelector } from '@/components/ProjectSelector';
-import { TaskBoard } from '@/components/TaskBoard';
+import { Backlog } from '@/components/Backlog';
 import { SchedulePanel } from '@/components/SchedulePanel';
 import { GitHistory } from '@/components/GitHistory';
 import { DrawioEmbed } from '@/components/DrawioEmbed';
@@ -52,7 +52,7 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <>{activeTab === 'tasks' && <TaskBoard />}{activeTab === 'architectures' && <DrawioEmbed />}{activeTab === 'workflow' && <WorkflowEditor />}</>
+            <>{activeTab === 'tasks' && <Backlog />}{activeTab === 'architectures' && <DrawioEmbed />}{activeTab === 'workflow' && <WorkflowEditor />}</>
           )}
         </main>
       </div>

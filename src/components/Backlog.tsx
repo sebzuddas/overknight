@@ -10,7 +10,7 @@ import type { Task, Epic } from '@/lib/types';
 
 import { LogViewer } from './LogViewer';
 
-export function TaskBoard() {
+export function Backlog() {
     const { tasksData, createEpic, createTask, updateTask, deleteTask, runTasks } = useProject();
     const [newConfirmEpic, setNewConfirmEpic] = useState(false);
     const [newEpicTitle, setNewEpicTitle] = useState('');
