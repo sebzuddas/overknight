@@ -19,6 +19,9 @@ export interface Task {
   branch: string | null;
   createdAt: string;
   completedAt: string | null;
+  startDate?: string;
+  endDate?: string;
+  assignee?: string;
 }
 
 export interface Epic {
@@ -29,6 +32,7 @@ export interface Epic {
   status: TaskStatus;
   tasks: Task[];
   createdAt: string;
+  assignee?: string;
 }
 
 export interface TasksData {
