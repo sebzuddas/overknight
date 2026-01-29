@@ -9,13 +9,13 @@ import { DrawioEmbed } from '@/components/DrawioEmbed';
 import { WorkflowEditor } from '@/components/WorkflowEditor';
 import { useProject } from '@/context/ProjectContext';
 
-type Tab = 'tasks' | 'architectures' | 'workflow';
+type Tab = 'tasks' | 'architectures' | 'workflow' | 'gantt';
 
 export default function Home() {
   const { tasksData, isRunning, projectPath } = useProject();
   const [activeTab, setActiveTab] = useState<Tab>('tasks');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const tabs: { id: Tab; label: string }[] = [{ id: 'tasks', label: 'Backlog' }, { id: 'architectures', label: 'Architectures' }, { id: 'workflow', label: 'Workflow' }];
+  const tabs: { id: Tab; label: string }[] = [{ id: 'tasks', label: 'Backlog' }, { id: 'architectures', label: 'Architectures' }, { id: 'workflow', label: 'Workflow' }, { id: 'gantt', label: 'Gantt Chart' }];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
@@ -52,7 +52,7 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <>{activeTab === 'tasks' && <Backlog />}{activeTab === 'architectures' && <DrawioEmbed />}{activeTab === 'workflow' && <WorkflowEditor />}</>
+            <>{activeTab === 'tasks' && <Backlog />}{activeTab === 'architectures' && <DrawioEmbed />}{activeTab === 'workflow' && <WorkflowEditor />}{activeTab === 'gantt' && <GanttChart />}</>
           )}
         </main>
       </div>
