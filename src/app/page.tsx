@@ -7,6 +7,7 @@ import { SchedulePanel } from '@/components/SchedulePanel';
 import { GitHistory } from '@/components/GitHistory';
 import { DrawioEmbed } from '@/components/DrawioEmbed';
 import { WorkflowEditor } from '@/components/WorkflowEditor';
+import { GanttChart } from '@/components/GanttChart';
 import { useProject } from '@/context/ProjectContext';
 
 type Tab = 'tasks' | 'architectures' | 'workflow' | 'gantt';

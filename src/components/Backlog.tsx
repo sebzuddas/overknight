@@ -1,23 +1,40 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { DndContext, closestCenter, DragOverlay, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, Play, MoreVertical, CheckCircle2, Circle, XCircle, Loader2, GripVertical, Square, MessageSquare } from 'lucide-react';
+import { Plus, Play, MoreVertical, CheckCircle2, Circle, XCircle, Loader2, GripVertical, Square, MessageSquare, ChevronDown, ArrowDown, Eye, EyeOff } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 import type { Task, Epic } from '@/lib/types';
 
 import { LogViewer } from './LogViewer';
 
 export function Backlog() {
-    const { tasksData, createEpic, createTask, updateTask, deleteTask, runTasks } = useProject();
+    const { tasksData, createEpic, createTask, updateTask, deleteTask, runTasks, reorderTasks } = useProject();
     const [newConfirmEpic, setNewConfirmEpic] = useState(false);
     const [newEpicTitle, setNewEpicTitle] = useState('');
     const [newEpicDescription, setNewEpicDescription] = useState('');
     const [viewingLogsForTask, setViewingLogsForTask] = useState<string | null>(null);
 
     if (!tasksData) return <div>Loading...</div>;
+
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+
+        // Find which epic this task belongs to
+        const epic = tasksData.epics.find(e => e.tasks.some(t => t.id === active.id));
+        if (!epic) return;
+
+        const oldIndex = epic.tasks.findIndex(t => t.id === active.id);
+        const newIndex = epic.tasks.findIndex(t => t.id === over.id);
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+            const newOrder = arrayMove(epic.tasks, oldIndex, newIndex).map(t => t.id);
+            await reorderTasks(epic.id, newOrder);
+        }
+    };
 
     const handleCreateEpic = async () => {
         if (newEpicTitle.trim()) {
@@ -64,9 +81,11 @@ export function Backlog() {
                 )}
 
                 <div className="space-y-6 pb-20">
-                    {tasksData.epics.map(epic => (
-                        <EpicCard key={epic.id} epic={epic} onViewLogs={setViewingLogsForTask} />
-                    ))}
+                    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                        {tasksData.epics.map(epic => (
+                            <EpicCard key={epic.id} epic={epic} onViewLogs={setViewingLogsForTask} />
+                        ))}
+                    </DndContext>
                 </div>
             </div>
 
@@ -89,6 +108,21 @@ function EpicCard({ epic, onViewLogs }: { epic: Epic; onViewLogs: (taskId: strin
     const [isEditing, setIsEditing] = useState(false);
     const [editTitle, setEditTitle] = useState(epic.title);
     const [editDescription, setEditDescription] = useState(epic.description);
+    const [editAssignee, setEditAssignee] = useState(epic.assignee || '');
+    const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
+    const [showCompleted, setShowCompleted] = useState(true);
+
+    const displayedTasks = showCompleted
+        ? epic.tasks
+        : epic.tasks.filter(t => t.status !== 'completed');
+
+    const toggleTaskSelection = (taskId: string) => {
+        setSelectedTasks(prev =>
+            prev.includes(taskId)
+                ? prev.filter(id => id !== taskId)
+                : [...prev, taskId]
+        );
+    };
 
     const handleAddTask = async () => {
         if (newTaskTitle.trim()) {
@@ -99,7 +133,11 @@ function EpicCard({ epic, onViewLogs }: { epic: Epic; onViewLogs: (taskId: strin
 
     const handleSaveEpic = async () => {
         if (editTitle.trim()) {
-            await updateEpic(epic.id, { title: editTitle, description: editDescription });
+            await updateEpic(epic.id, {
+                title: editTitle,
+                description: editDescription,
+                assignee: editAssignee || undefined,
+            });
             setIsEditing(false);
         }
     };
@@ -107,6 +145,22 @@ function EpicCard({ epic, onViewLogs }: { epic: Epic; onViewLogs: (taskId: strin
     return (
         <div className="bg-gray-800/30 rounded-xl border border-gray-700/50 overflow-hidden">
             <div className="p-4 border-b border-gray-700/50 flex items-center justify-between bg-gray-800/50">
+                <div onClick={(e) => {
+                    e.stopPropagation();
+                    if (selectedTasks.length === epic.tasks.length && epic.tasks.length > 0) {
+                        setSelectedTasks([]);
+                    } else {
+                        setSelectedTasks(epic.tasks.map(t => t.id));
+                    }
+                }} className="mr-4 cursor-pointer">
+                    {selectedTasks.length === epic.tasks.length && epic.tasks.length > 0 ? (
+                        <div className="w-4 h-4 bg-indigo-500 rounded flex items-center justify-center">
+                            <CheckCircle2 className="w-3 h-3 text-white" />
+                        </div>
+                    ) : (
+                        <div className="w-4 h-4 border border-gray-600 rounded hover:border-gray-400 transition-colors" />
+                    )}
+                </div>
                 {isEditing ? (
                     <div className="flex-1 mr-4 space-y-2">
                         <input
@@ -118,6 +172,12 @@ function EpicCard({ epic, onViewLogs }: { epic: Epic; onViewLogs: (taskId: strin
                             value={editDescription}
                             onChange={e => setEditDescription(e.target.value)}
                             className="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-sm text-gray-400 w-full min-h-[60px]"
+                        />
+                        <input
+                            value={editAssignee}
+                            onChange={e => setEditAssignee(e.target.value)}
+                            className="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-sm w-full focus:outline-none focus:border-indigo-500"
+                            placeholder="Assignee (optional)"
                         />
                         <div className="flex gap-2">
                             <button onClick={handleSaveEpic} className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs hover:bg-green-500/30">Save</button>
@@ -135,18 +195,43 @@ function EpicCard({ epic, onViewLogs }: { epic: Epic; onViewLogs: (taskId: strin
                 )}
                 <div className="flex items-center gap-2">
                     <button
-                        onClick={() => runTasks(epic.tasks.filter(t => t.status === 'pending').map(t => t.id))}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 text-green-400 hover:bg-green-500/20 rounded-lg text-sm transition-colors"
+                        onClick={() => setShowCompleted(!showCompleted)}
+                        className={`p-1.5 rounded transition-colors ${showCompleted ? 'text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20' : 'text-gray-500 hover:bg-gray-700/50'}`}
+                        title={showCompleted ? "Hide Completed Tasks" : "Show Completed Tasks"}
                     >
-                        <Play className="w-3.5 h-3.5" /> Run Pending
+                        {showCompleted ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                    </button>
+                    <button
+                        onClick={() => {
+                            if (selectedTasks.length === 0) return;
+                            runTasks(selectedTasks);
+                            setSelectedTasks([]);
+                        }}
+                        disabled={selectedTasks.length === 0}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all duration-200 ${selectedTasks.length > 0
+                            ? 'bg-indigo-500 hover:bg-indigo-600 text-white font-medium shadow-sm shadow-indigo-500/20'
+                            : 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700/50'
+                            }`}
+                    >
+                        <Play className={`w-3.5 h-3.5 ${selectedTasks.length === 0 ? 'opacity-50' : ''}`} />
+                        {selectedTasks.length > 0 ? `Run Selected (${selectedTasks.length})` : 'Select tasks to run'}
                     </button>
                 </div>
             </div>
 
             <div className="p-4 space-y-2">
-                {epic.tasks.map(task => (
-                    <TaskItem key={task.id} task={task} onViewLogs={onViewLogs} />
-                ))}
+                <SortableContext items={displayedTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                    {displayedTasks.map((task, index) => (
+                        <TaskItem
+                            key={task.id}
+                            task={task}
+                            onViewLogs={onViewLogs}
+                            isSelected={selectedTasks.includes(task.id)}
+                            onToggleSelection={() => toggleTaskSelection(task.id)}
+                            isLast={index === displayedTasks.length - 1}
+                        />
+                    ))}
+                </SortableContext>
 
                 <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-700/30">
                     <Plus className="w-4 h-4 text-gray-500" />
@@ -163,8 +248,42 @@ function EpicCard({ epic, onViewLogs }: { epic: Epic; onViewLogs: (taskId: strin
     );
 }
 
-function TaskItem({ task, onViewLogs }: { task: Task; onViewLogs: (taskId: string) => void }) {
-    const { runTasks, cancelCurrentRun } = useProject();
+function TaskItem({
+    task,
+    onViewLogs,
+    isSelected,
+    onToggleSelection,
+    isLast
+}: {
+    task: Task;
+    onViewLogs: (taskId: string) => void;
+    isSelected: boolean;
+    onToggleSelection: () => void;
+    isLast: boolean;
+}) {
+    const { runTasks, cancelCurrentRun, updateTask } = useProject();
+    const [isEditing, setIsEditing] = useState(false);
+    const [editTitle, setEditTitle] = useState(task.title);
+    const [editDescription, setEditDescription] = useState(task.description || '');
+    const [editStartDate, setEditStartDate] = useState(task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '');
+    const [editEndDate, setEditEndDate] = useState(task.endDate ? new Date(task.endDate).toISOString().split('T')[0] : '');
+    const [editAssignee, setEditAssignee] = useState(task.assignee || '');
+
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id: task.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
     const statusColors = {
         'pending': 'text-gray-400',
         'in-progress': 'text-blue-400',
@@ -188,33 +307,143 @@ function TaskItem({ task, onViewLogs }: { task: Task; onViewLogs: (taskId: strin
         }
     };
 
-    return (
-        <div className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg group">
-            <GripVertical className="w-4 h-4 text-gray-600 opacity-0 group-hover:opacity-100 cursor-grab" />
-            <StatusIcon className={`w-4 h-4 ${statusColors[task.status]} ${task.status === 'in-progress' ? 'animate-spin' : ''}`} />
-            <span className={`flex-1 text-sm ${task.status === 'completed' ? 'text-gray-500 line-through' : ''}`}>
-                {task.title}
-            </span>
-            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                    onClick={handleRunStop}
-                    className={`p-1.5 rounded transition-colors ${task.status === 'in-progress'
-                        ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
-                        : 'bg-green-500/10 text-green-400 hover:bg-green-500/20'
-                        }`}
-                    title={task.status === 'in-progress' ? 'Stop' : 'Run'}
-                >
-                    {task.status === 'in-progress' ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5" />}
-                </button>
-                <button
-                    onClick={() => onViewLogs(task.id)}
-                    className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300"
-                    title="Chat & Logs"
-                >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                </button>
-                <span className="text-xs text-gray-600 font-mono ml-2">{task.id}</span>
+    const handleSave = async () => {
+        if (editTitle.trim()) {
+            await updateTask(task.id, {
+                title: editTitle,
+                description: editDescription,
+                startDate: editStartDate || undefined,
+                endDate: editEndDate || undefined,
+                assignee: editAssignee || undefined,
+            });
+            setIsEditing(false);
+        }
+    };
+
+    if (isEditing) {
+        return (
+            <div className="p-3 bg-gray-700/30 rounded-lg border border-gray-600/50 space-y-3">
+                <input
+                    value={editTitle}
+                    onChange={e => setEditTitle(e.target.value)}
+                    className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm w-full focus:outline-none focus:border-indigo-500"
+                    placeholder="Task Title"
+                    autoFocus
+                />
+                <textarea
+                    value={editDescription}
+                    onChange={e => setEditDescription(e.target.value)}
+                    className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs w-full min-h-[60px] focus:outline-none focus:border-indigo-500"
+                    placeholder="Task Description"
+                />
+                <div className="flex gap-2 items-center">
+                    <label className="text-gray-400 text-xs w-16 shrink-0">Start Date:</label>
+                    <input
+                        type="date"
+                        value={editStartDate}
+                        onChange={e => setEditStartDate(e.target.value)}
+                        className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs w-full focus:outline-none focus:border-indigo-500"
+                    />
+                </div>
+                <div className="flex gap-2 items-center">
+                    <label className="text-gray-400 text-xs w-16 shrink-0">End Date:</label>
+                    <input
+                        type="date"
+                        value={editEndDate}
+                        onChange={e => setEditEndDate(e.target.value)}
+                        className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs w-full focus:outline-none focus:border-indigo-500"
+                    />
+                </div>
+                <div className="flex gap-2 items-center">
+                    <label className="text-gray-400 text-xs w-16 shrink-0">Assignee:</label>
+                    <input
+                        type="text"
+                        value={editAssignee}
+                        onChange={e => setEditAssignee(e.target.value)}
+                        className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs w-full focus:outline-none focus:border-indigo-500"
+                        placeholder="Assignee Name"
+                    />
+                </div>
+                <div className="flex gap-2">
+                    <button onClick={handleSave} className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs hover:bg-green-500/30">Save</button>
+                    <button onClick={() => setIsEditing(false)} className="px-2 py-1 bg-gray-700 text-gray-400 rounded text-xs hover:bg-gray-600">Cancel</button>
+                </div>
             </div>
+        );
+    }
+
+    return (
+        <div
+            ref={setNodeRef} style={style}
+            className={`flex flex-col gap-1 p-2 rounded-lg group transition-colors ${isSelected ? 'bg-indigo-500/10 border border-indigo-500/20' : 'hover:bg-white/5 border border-transparent'} relative`}
+        >
+            <div className="flex items-center gap-3">
+                <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 -ml-2 text-gray-600 hover:text-gray-400 opacity-50 hover:opacity-100" title="Drag to reorder">
+                    <GripVertical className="w-4 h-4" />
+                </div>
+
+                {/* Flow Arrow */}
+                {!isLast && (
+                    <div className="absolute left-[1.1rem] -bottom-3 z-10 text-gray-700 pointer-events-none opacity-50">
+                        <ArrowDown className="w-3 h-3" />
+                    </div>
+                )}
+
+                <div onClick={(e) => { e.stopPropagation(); onToggleSelection(); }} className="cursor-pointer z-20">
+                    {isSelected ? (
+                        <div className="w-4 h-4 bg-indigo-500 rounded flex items-center justify-center">
+                            <CheckCircle2 className="w-3 h-3 text-white" />
+                        </div>
+                    ) : (
+                        <div className="w-4 h-4 border border-gray-600 rounded hover:border-gray-400 transition-colors" />
+                    )}
+                </div>
+                <div onClick={(e) => {
+                    e.stopPropagation();
+                    let newStatus: Task['status'] = 'pending';
+                    if (task.status === 'pending' || task.status === 'in-progress') newStatus = 'completed';
+                    else if (task.status === 'completed') newStatus = 'failed';
+                    else if (task.status === 'failed') newStatus = 'pending';
+
+                    updateTask(task.id, {
+                        status: newStatus,
+                        completedAt: newStatus === 'completed' ? new Date().toISOString() : null
+                    });
+                }} className="cursor-pointer hover:scale-110 transition-transform">
+                    <StatusIcon className={`w-4 h-4 ${statusColors[task.status]} ${task.status === 'in-progress' ? 'animate-spin' : ''}`} />
+                </div>
+                <span
+                    onClick={() => { setIsEditing(true); setEditTitle(task.title); setEditDescription(task.description || ''); }}
+                    className={`flex-1 text-sm cursor-pointer hover:text-indigo-400 transition-colors ${task.status === 'completed' ? 'text-gray-500 line-through decoration-gray-600' : ''}`}
+                >
+                    {task.title}
+                </span>
+                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                        onClick={handleRunStop}
+                        className={`p-1.5 rounded transition-colors ${task.status === 'in-progress'
+                            ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
+                            : 'bg-green-500/10 text-green-400 hover:bg-green-500/20'
+                            }`}
+                        title={task.status === 'in-progress' ? 'Stop' : 'Run'}
+                    >
+                        {task.status === 'in-progress' ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5" />}
+                    </button>
+                    <button
+                        onClick={() => onViewLogs(task.id)}
+                        className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300"
+                        title="Chat & Logs"
+                    >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-xs text-gray-600 font-mono ml-2">{task.id}</span>
+                </div>
+            </div>
+            {task.description && (
+                <div className="pl-14 text-xs text-gray-500 line-clamp-2" onClick={() => { setIsEditing(true); setEditTitle(task.title); setEditDescription(task.description || ''); }}>
+                    {task.description}
+                </div>
+            )}
         </div>
     );
 }

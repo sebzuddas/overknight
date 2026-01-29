@@ -18,17 +18,17 @@
           "title": "Rename the task board to be the 'backlog'",
           "description": "",
           "priority": 3,
-          "status": "failed",
+          "status": "completed",
           "branch": "main",
           "createdAt": "2026-01-29T16:23:23.027Z",
-          "completedAt": "2026-01-29T20:03:02.434Z"
+          "completedAt": "2026-01-29T20:30:36.792Z"
         },
         {
           "id": "task-1769703830018",
           "title": "Add a gantt chart functionality where each task can be assigned",
           "description": "",
           "priority": 3,
-          "status": "failed",
+          "status": "in-progress",
           "branch": "main",
           "createdAt": "2026-01-29T16:23:50.018Z",
           "completedAt": "2026-01-29T19:19:10.353Z"
@@ -51,16 +51,6 @@
           "status": "pending",
           "branch": null,
           "createdAt": "2026-01-29T16:30:59.191Z",
-          "completedAt": null
-        },
-        {
-          "id": "task-1769704308335",
-          "title": "Import from github projects?",
-          "description": "",
-          "priority": 3,
-          "status": "pending",
-          "branch": null,
-          "createdAt": "2026-01-29T16:31:48.335Z",
           "completedAt": null
         },
         {
@@ -92,6 +82,36 @@
           "branch": null,
           "createdAt": "2026-01-29T19:04:30.469Z",
           "completedAt": null
+        },
+        {
+          "id": "task-1769718242465",
+          "title": "Schedule at button for each task. ",
+          "description": "",
+          "priority": 3,
+          "status": "pending",
+          "branch": null,
+          "createdAt": "2026-01-29T20:24:02.466Z",
+          "completedAt": null
+        },
+        {
+          "id": "task-1769704308335",
+          "title": "Import from github projects?",
+          "description": "",
+          "priority": 3,
+          "status": "pending",
+          "branch": null,
+          "createdAt": "2026-01-29T16:31:48.335Z",
+          "completedAt": null
+        },
+        {
+          "id": "task-1769718283740",
+          "title": "Generate workflows and each task should then follow a given workflow. ",
+          "description": "",
+          "priority": 3,
+          "status": "pending",
+          "branch": null,
+          "createdAt": "2026-01-29T20:24:43.740Z",
+          "completedAt": null
         }
       ],
       "createdAt": "2026-01-29T16:08:42.218Z"
@@ -106,10 +126,10 @@
         {
           "id": "task-1769704189522",
           "title": "Implement the draw.io editor in the architectures window.",
-          "description": "",
+          "description": "We need to use draw.io's embedded editor in the architecture window. There should be some default types of diagrams that the user is encouraged to draw, such as ERDs, flow diagrams, class diagrams and other SysML diagram types. ",
           "priority": 3,
-          "status": "pending",
-          "branch": null,
+          "status": "in-progress",
+          "branch": "main",
           "createdAt": "2026-01-29T16:29:49.522Z",
           "completedAt": null
         }
