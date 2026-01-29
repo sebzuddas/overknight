@@ -16,8 +16,8 @@ interface ProjectContextType {
     refreshWorkflow: () => Promise<void>;
     refreshRuns: () => Promise<void>;
     initializeProject: (projectName: string) => Promise<void>;
-    createEpic: (title: string, description?: string, priority?: number) => Promise<Epic>;
-    createTask: (epicId: string, title: string, description?: string, priority?: number) => Promise<Task>;
+    createEpic: (title: string, description?: string, priority?: number, assignee?: string) => Promise<Epic>;
+    createTask: (epicId: string, title: string, description?: string, priority?: number, startDate?: string, endDate?: string, assignee?: string) => Promise<Task>;
     updateEpic: (epicId: string, updates: Partial<Epic>) => Promise<void>;
     updateTask: (taskId: string, updates: Partial<Task>) => Promise<void>;
     deleteEpic: (epicId: string) => Promise<void>;
@@ -26,6 +26,7 @@ interface ProjectContextType {
     scheduleRun: (taskIds: string[], scheduledTime: Date) => Promise<void>;
     getTaskLogs: (taskId: string) => Promise<string>;
     cancelCurrentRun: () => Promise<void>;
+    reorderTasks: (epicId: string, taskIds: string[]) => Promise<void>;
 }
 
 const ProjectContext = createContext<ProjectContextType | null>(null);
@@ -112,8 +113,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }, [projectPath]);
 
     const initializeProject = useCallback(async (projectName: string) => { await post('/api/tasks', 'initialize', { projectName }); await refreshTasks(); refreshWorkflow(); }, [post, refreshTasks, refreshWorkflow]);
-    const createEpic = useCallback(async (title: string, description?: string, priority?: number) => { const epic = await post('/api/tasks', 'createEpic', { title, description, priority }); await refreshTasks(); return epic; }, [post, refreshTasks]);
-    const createTask = useCallback(async (epicId: string, title: string, description?: string, priority?: number) => { const task = await post('/api/tasks', 'createTask', { epicId, title, description, priority }); await refreshTasks(); return task; }, [post, refreshTasks]);
+    const createEpic = useCallback(async (title: string, description?: string, priority?: number, assignee?: string) => { const epic = await post('/api/tasks', 'createEpic', { title, description, priority, assignee }); await refreshTasks(); return epic; }, [post, refreshTasks]);
+    const createTask = useCallback(async (epicId: string, title: string, description?: string, priority?: number, startDate?: string, endDate?: string, assignee?: string) => { const task = await post('/api/tasks', 'createTask', { epicId, title, description, priority, startDate, endDate, assignee }); await refreshTasks(); return task; }, [post, refreshTasks]);
     const updateEpic = useCallback(async (epicId: string, updates: Partial<Epic>) => { await post('/api/tasks', 'updateEpic', { epicId, updates }); await refreshTasks(); }, [post, refreshTasks]);
     const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) => { await post('/api/tasks', 'updateTask', { taskId, updates }); await refreshTasks(); }, [post, refreshTasks]);
     const deleteEpic = useCallback(async (epicId: string) => { await post('/api/tasks', 'deleteEpic', { epicId }); await refreshTasks(); }, [post, refreshTasks]);
@@ -133,8 +134,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         await refreshRuns();
     }, [post, refreshRuns]);
 
+    const reorderTasks = useCallback(async (epicId: string, taskIds: string[]) => {
+        // Optimistic update could be added here
+        await post('/api/tasks', 'reorderTasks', { epicId, taskIds });
+        await refreshTasks();
+    }, [post, refreshTasks]);
+
     return (
-        <ProjectContext.Provider value={{ projectPath, setProjectPath, tasksData, workflow, scheduledRuns, isLoading, isRunning, error, refreshTasks, refreshWorkflow, refreshRuns, initializeProject, createEpic, createTask, updateEpic, updateTask, deleteEpic, deleteTask, runTasks, scheduleRun, getTaskLogs, cancelCurrentRun }}>
+        <ProjectContext.Provider value={{ projectPath, setProjectPath, tasksData, workflow, scheduledRuns, isLoading, isRunning, error, refreshTasks, refreshWorkflow, refreshRuns, initializeProject, createEpic, createTask, updateEpic, updateTask, deleteEpic, deleteTask, runTasks, scheduleRun, getTaskLogs, cancelCurrentRun, reorderTasks }}>
             {children}
         </ProjectContext.Provider>
     );
