@@ -43,7 +43,7 @@
           "status": "failed",
           "branch": "main",
           "createdAt": "2026-01-29T16:23:58.518Z",
-          "completedAt": null,
+          "completedAt": "2026-01-29T21:36:46.900Z",
           "startDate": "2026-02-01T00:00:00.000Z",
           "endDate": "2026-02-01T01:00:00.000Z"
         },
@@ -132,10 +132,10 @@
           "title": "Implement the draw.io editor in the architectures window.",
           "description": "We need to use draw.io's embedded editor in the architecture window. There should be some default types of diagrams that the user is encouraged to draw, such as ERDs, flow diagrams, class diagrams and other SysML diagram types. ",
           "priority": 3,
-          "status": "in-progress",
+          "status": "failed",
           "branch": "main",
           "createdAt": "2026-01-29T16:29:49.522Z",
-          "completedAt": "2026-01-29T20:40:03.499Z"
+          "completedAt": "2026-01-29T21:29:49.150Z"
         }
       ],
       "createdAt": "2026-01-29T16:08:58.071Z"

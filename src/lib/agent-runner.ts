@@ -127,12 +127,22 @@ ${step.prompt}
             }
 
             let stdout = '', stderr = '';
+            let isCompleted = false;
 
             this.currentProcess.stdout?.on('data', d => {
                 const chunk = d.toString();
                 console.log(`[AgentRunner] stdout: ${chunk}`);
                 stdout += chunk;
                 if (this.currentTaskId) appendTaskLog(this.projectPath, this.currentTaskId, chunk).catch(console.error);
+
+                // Check for completion message
+                if (chunk.includes("Task complete. All changes committed. I'm done.")) {
+                    console.log('[AgentRunner] Detected completion message. Force stopping process.');
+                    isCompleted = true;
+                    if (this.currentProcess?.pid) {
+                        treeKill(this.currentProcess.pid, 'SIGTERM');
+                    }
+                }
             });
 
             this.currentProcess.stderr?.on('data', d => {
@@ -142,10 +152,15 @@ ${step.prompt}
                 if (this.currentTaskId) appendTaskLog(this.projectPath, this.currentTaskId, chunk).catch(console.error);
             });
 
-            this.currentProcess.on('close', code => {
-                console.log(`[AgentRunner] Process closed with code: ${code}`);
+            this.currentProcess.on('close', (code, signal) => {
+                console.log(`[AgentRunner] Process closed with code: ${code}, signal: ${signal}`);
                 this.currentProcess = null;
-                code === 0 ? resolve(stdout) : reject(new Error(`Exit ${code}: ${stderr}`));
+                // Resolve if code is 0 OR if we explicitly marked it as completed (force killed)
+                if (code === 0 || isCompleted) {
+                    resolve(stdout);
+                } else {
+                    reject(new Error(`Exit ${code} (Signal: ${signal}): ${stderr}`));
+                }
             });
 
             this.currentProcess.on('error', err => {

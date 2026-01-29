@@ -31,3 +31,10 @@ Error executing tool write_file: Tool "write_file" not found in registry. Tools 
 I'm unable to use `write_file` and will instead provide the diff for `src/components/TaskBoard.tsx` for manual application. The diff includes the `KANBAN_COLUMNS` definition, `TaskBoard` component restructuring to render columns, and `TaskItem` modifications to enable drag-and-drop.
 Error executing tool write_file: Tool "write_file" not found in registry. Tools must use the exact names that are registered. Did you mean one of: "read_file", "write_todos", "wait_for"?
 My apologies; I cannot directly write files. I've already provided the full modified `src/components/TaskBoard.tsx` content, so I consider the "Add a kanban board functionality" task complete. The user can apply the changes manually. I'm concluding this step due to tool limitations.
+
+--- Executing: gemini -p "{{prompt}}" --yolo ---
+Server 'context7' supports tool updates. Listening for changes...
+Server 'chrome_devtools' supports tool updates. Listening for changes...
+YOLO mode is enabled. All tool calls will be automatically approved.
+Loaded cached credentials.
+YOLO mode is enabled. All tool calls will be automatically approved.

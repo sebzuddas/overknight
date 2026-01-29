@@ -159,7 +159,6 @@ export function GanttChart() {
         columns={columns}
         // @ts-expect-error: The editorShape prop from SVARGanttChart expects a different type definition.
         editorShape={editorShape}
-        // @ts-expect-error: The onTaskUpdate prop from SVARGanttChart expects a different type definition.
         onTaskUpdate={handleTaskUpdate}
       />
     </div>
