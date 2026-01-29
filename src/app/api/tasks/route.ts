@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
         case 'createEpic': {
-            const newEpic: Epic = { id: `epic-${Date.now()}`, title: data.title, description: data.description || '', priority: data.priority || 3, status: 'pending', tasks: [], createdAt: new Date().toISOString() };
+            const newEpic: Epic = { id: `epic-${Date.now()}`, title: data.title, description: data.description || '', priority: data.priority || 3, status: 'pending', tasks: [], createdAt: new Date().toISOString(), assignee: data.assignee || undefined };
             tasksData.epics.push(newEpic);
             await writeTasks(projectPath, tasksData);
             return NextResponse.json(newEpic);
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
         case 'createTask': {
             const epic = tasksData.epics.find(e => e.id === data.epicId);
             if (!epic) return NextResponse.json({ error: 'Epic not found' }, { status: 404 });
-            const newTask: Task = { id: `task-${Date.now()}`, title: data.title, description: data.description || '', priority: data.priority || 3, status: 'pending', branch: null, createdAt: new Date().toISOString(), completedAt: null };
+            const newTask: Task = { id: `task-${Date.now()}`, title: data.title, description: data.description || '', priority: data.priority || 3, status: 'pending', branch: null, createdAt: new Date().toISOString(), completedAt: null, startDate: data.startDate || undefined, endDate: data.endDate || undefined, assignee: data.assignee || undefined };
             epic.tasks.push(newTask);
             await writeTasks(projectPath, tasksData);
             return NextResponse.json(newTask);
