@@ -29,51 +29,55 @@ export function TaskBoard() {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Task Board</h2>
-                <button
-                    onClick={() => setNewConfirmEpic(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-sm font-medium"
-                >
-                    <Plus className="w-4 h-4" /> New Epic
-                </button>
-            </div>
-
-            {newConfirmEpic && (
-                <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50 flex flex-col gap-3">
-                    <input
-                        value={newEpicTitle}
-                        onChange={e => setNewEpicTitle(e.target.value)}
-                        placeholder="Epic Title"
-                        className="bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm w-full focus:outline-none focus:border-indigo-500"
-                        autoFocus
-                    />
-                    <textarea
-                        value={newEpicDescription}
-                        onChange={e => setNewEpicDescription(e.target.value)}
-                        placeholder="Epic Description (optional)"
-                        className="bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm w-full focus:outline-none focus:border-indigo-500 min-h-[60px]"
-                    />
-                    <div className="flex gap-2">
-                        <button onClick={handleCreateEpic} className="px-3 py-1.5 bg-green-500 hover:bg-green-600 rounded text-sm transition-colors">Create Epic</button>
-                        <button onClick={() => setNewConfirmEpic(false)} className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors">Cancel</button>
-                    </div>
+        <div className="flex h-[calc(100vh-8rem)] gap-6">
+            <div className="flex-1 space-y-6 overflow-auto">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold">Task Board</h2>
+                    <button
+                        onClick={() => setNewConfirmEpic(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-sm font-medium"
+                    >
+                        <Plus className="w-4 h-4" /> New Epic
+                    </button>
                 </div>
-            )}
 
-            <div className="space-y-6">
-                {tasksData.epics.map(epic => (
-                    <EpicCard key={epic.id} epic={epic} onViewLogs={setViewingLogsForTask} />
-                ))}
+                {newConfirmEpic && (
+                    <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50 flex flex-col gap-3">
+                        <input
+                            value={newEpicTitle}
+                            onChange={e => setNewEpicTitle(e.target.value)}
+                            placeholder="Epic Title"
+                            className="bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm w-full focus:outline-none focus:border-indigo-500"
+                            autoFocus
+                        />
+                        <textarea
+                            value={newEpicDescription}
+                            onChange={e => setNewEpicDescription(e.target.value)}
+                            placeholder="Epic Description (optional)"
+                            className="bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm w-full focus:outline-none focus:border-indigo-500 min-h-[60px]"
+                        />
+                        <div className="flex gap-2">
+                            <button onClick={handleCreateEpic} className="px-3 py-1.5 bg-green-500 hover:bg-green-600 rounded text-sm transition-colors">Create Epic</button>
+                            <button onClick={() => setNewConfirmEpic(false)} className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors">Cancel</button>
+                        </div>
+                    </div>
+                )}
+
+                <div className="space-y-6 pb-20">
+                    {tasksData.epics.map(epic => (
+                        <EpicCard key={epic.id} epic={epic} onViewLogs={setViewingLogsForTask} />
+                    ))}
+                </div>
             </div>
 
             {viewingLogsForTask && (
-                <LogViewer
-                    taskId={viewingLogsForTask}
-                    onClose={() => setViewingLogsForTask(null)}
-                    isLive={tasksData.epics.some(e => e.tasks.some(t => t.id === viewingLogsForTask && t.status === 'in-progress'))}
-                />
+                <div className="w-[450px] shrink-0 border-l border-gray-800 pl-6">
+                    <LogViewer
+                        taskId={viewingLogsForTask}
+                        onClose={() => setViewingLogsForTask(null)}
+                        isLive={tasksData.epics.some(e => e.tasks.some(t => t.id === viewingLogsForTask && t.status === 'in-progress'))}
+                    />
+                </div>
             )}
         </div>
     );

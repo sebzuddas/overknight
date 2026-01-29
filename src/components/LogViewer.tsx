@@ -44,41 +44,39 @@ export function LogViewer({ taskId, onClose, isLive = false }: LogViewerProps) {
     }, [taskId, isLive, getTaskLogs]);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-6">
-            <div className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-gray-800/50">
-                    <div className="flex items-center gap-2">
-                        <Terminal className="w-5 h-5 text-indigo-400" />
-                        <h3 className="font-semibold text-gray-200">Task Log: {taskId}</h3>
-                        {isLive && (
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-green-500/10 text-green-400 rounded text-xs font-mono">
-                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                                LIVE
-                            </div>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {isLive && (
-                            <LogControls />
-                        )}
-                        <button onClick={onClose} className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors">
-                            <X className="w-5 h-5" />
-                        </button>
-                    </div>
-                </div>
-                <div className="flex-1 overflow-auto bg-black p-4 font-mono text-sm">
-                    {loading && !logs ? (
-                        <div className="flex items-center justify-center h-full text-gray-500 gap-2">
-                            <Loader2 className="w-5 h-5 animate-spin" /> Loading logs...
+        <div className="h-full flex flex-col bg-gray-900/50 border border-gray-700/50 rounded-xl overflow-hidden backdrop-blur-sm">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-gray-800/50">
+                <div className="flex items-center gap-2 overflow-hidden">
+                    <Terminal className="w-4 h-4 text-indigo-400 shrink-0" />
+                    <h3 className="font-semibold text-gray-200 text-sm truncate" title={taskId}>{taskId}</h3>
+                    {isLive && (
+                        <div className="flex items-center gap-1.5 px-1.5 py-0.5 bg-green-500/10 text-green-400 rounded text-[10px] font-mono shrink-0">
+                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                            LIVE
                         </div>
-                    ) : (
-                        <pre ref={preRef} className="whitespace-pre-wrap text-gray-300 leading-relaxed font-mono">
-                            {logs}
-                        </pre>
                     )}
                 </div>
-                <ChatInput onSend={(msg) => console.log('Chat message:', msg)} />
+                <div className="flex items-center gap-1 shrink-0">
+                    {isLive && (
+                        <LogControls />
+                    )}
+                    <button onClick={onClose} className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors">
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
             </div>
+            <div className="flex-1 overflow-auto bg-black p-3 font-mono text-xs">
+                {loading && !logs ? (
+                    <div className="flex items-center justify-center h-full text-gray-500 gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" /> Loading...
+                    </div>
+                ) : (
+                    <pre ref={preRef} className="whitespace-pre-wrap text-gray-300 leading-relaxed font-mono">
+                        {logs}
+                    </pre>
+                )}
+            </div>
+            <ChatInput onSend={(msg) => console.log('Chat message:', msg)} />
         </div>
     );
 }

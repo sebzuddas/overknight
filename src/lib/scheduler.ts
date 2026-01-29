@@ -110,8 +110,32 @@ export class Scheduler {
         await this.updateRunStatus(runId, 'cancelled');
     }
 
-    cancelCurrent(): void {
-        if (this.currentRunner) this.currentRunner.cancel();
+    async cancelCurrent(): Promise<void> {
+        if (this.currentRunner) {
+            this.currentRunner.cancel();
+            this.currentRunner = null;
+        }
+
+        // Force update any in-progress tasks to cancelled
+        this.isRunning = false;
+        const tasksData = await readTasks(this.projectPath);
+        if (tasksData) {
+            let changed = false;
+            for (const epic of tasksData.epics) {
+                for (const task of epic.tasks) {
+                    if (task.status === 'in-progress') {
+                        task.status = 'failed'; // Mark as failed/cancelled
+                        task.completedAt = new Date().toISOString();
+                        changed = true;
+                    }
+                }
+            }
+            if (changed) {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                const { writeTasks } = require('./file-storage');
+                await writeTasks(this.projectPath, tasksData);
+            }
+        }
     }
 
     private async updateRunStatus(runId: string, status: ScheduledRun['status']): Promise<void> {

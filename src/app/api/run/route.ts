@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ run: await scheduler.scheduleNewRun(body.data.taskIds, new Date(body.data.scheduledTime)) });
         }
         case 'cancel': await scheduler.cancelRun(body.data.runId); return NextResponse.json({ success: true });
-        case 'cancelCurrent': scheduler.cancelCurrent(); return NextResponse.json({ success: true });
+        case 'cancelCurrent': await scheduler.cancelCurrent(); return NextResponse.json({ success: true });
         case 'runSingleTask': {
             if (scheduler.isCurrentlyRunning()) return NextResponse.json({ error: 'Already running' }, { status: 409 });
             const tasksData = await readTasks(projectPath);

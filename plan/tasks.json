@@ -18,27 +18,27 @@
           "title": "Rename the task board to be the 'backlog'",
           "description": "",
           "priority": 3,
-          "status": "in-progress",
+          "status": "failed",
           "branch": "main",
           "createdAt": "2026-01-29T16:23:23.027Z",
-          "completedAt": null
+          "completedAt": "2026-01-29T19:43:58.270Z"
         },
         {
           "id": "task-1769703830018",
           "title": "Add a gantt chart functionality where each task can be assigned",
           "description": "",
           "priority": 3,
-          "status": "in-progress",
+          "status": "failed",
           "branch": "main",
           "createdAt": "2026-01-29T16:23:50.018Z",
-          "completedAt": null
+          "completedAt": "2026-01-29T19:19:10.353Z"
         },
         {
           "id": "task-1769703838518",
           "title": "Add a kanban board functionality",
           "description": "",
           "priority": 3,
-          "status": "in-progress",
+          "status": "failed",
           "branch": "main",
           "createdAt": "2026-01-29T16:23:58.518Z",
           "completedAt": null

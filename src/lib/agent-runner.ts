@@ -171,8 +171,14 @@ ${step.prompt}
     }
 
     cancel(): void {
-        if (this.currentProcess) {
-            this.currentProcess.kill('SIGTERM');
+        if (this.currentProcess && this.currentProcess.pid) {
+            console.log(`[AgentRunner] Killing process tree: ${this.currentProcess.pid}`);
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            const treeKill = require('tree-kill');
+            treeKill(this.currentProcess.pid, 'SIGTERM', (err: Error) => {
+                if (err) console.error('[AgentRunner] Failed to kill process tree:', err);
+                else console.log('[AgentRunner] Process tree killed successfully');
+            });
             this.currentProcess = null;
         }
     }
