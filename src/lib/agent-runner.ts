@@ -171,6 +171,7 @@ ${step.prompt}
     }
 
     cancel(): void {
+        console.log(`[AgentRunner] Cancel called. PID: ${this.currentProcess?.pid}, Process exists: ${!!this.currentProcess}`);
         if (this.currentProcess && this.currentProcess.pid) {
             console.log(`[AgentRunner] Killing process tree: ${this.currentProcess.pid}`);
             // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -180,6 +181,8 @@ ${step.prompt}
                 else console.log('[AgentRunner] Process tree killed successfully');
             });
             this.currentProcess = null;
+        } else {
+            console.warn('[AgentRunner] Cancel called but no valid process/PID found');
         }
     }
 }

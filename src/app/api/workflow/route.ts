@@ -17,7 +17,12 @@ export async function POST(request: NextRequest) {
     const { action, data } = body;
 
     if (action === 'update') {
-        await writeWorkflow(projectPath, { steps: data.steps, agentCommand: data.agentCommand, workingDirectory: data.workingDirectory || projectPath });
+        await writeWorkflow(projectPath, {
+            steps: data.steps,
+            agentCommand: data.agentCommand,
+            workingDirectory: data.workingDirectory || projectPath,
+            permissions: data.permissions || { allowShell: true, allowGit: true, requireApproval: false }
+        });
         return NextResponse.json(await readWorkflow(projectPath));
     }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Settings, GripVertical, Plus, Trash2, ToggleLeft, ToggleRight, Terminal } from 'lucide-react';
+import { Settings, GripVertical, Plus, Trash2, ToggleLeft, ToggleRight, Terminal, Shield } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 import type { WorkflowStep } from '@/lib/types';
 
@@ -22,10 +22,13 @@ export function WorkflowEditor() {
     const [newStepName, setNewStepName] = useState('');
     const [newStepPrompt, setNewStepPrompt] = useState('');
 
+    const [permissions, setPermissions] = useState({ allowShell: true, allowGit: true, requireApproval: false });
+
     useEffect(() => {
         if (workflow) {
             setSteps(workflow.steps);
             setAgentCommand(workflow.agentCommand);
+            if (workflow.permissions) setPermissions(workflow.permissions);
             const agent = DEFAULT_AGENTS.find(a => a.command === workflow.agentCommand);
             setSelectedAgent(agent?.name || 'Custom');
         }
@@ -37,7 +40,7 @@ export function WorkflowEditor() {
             await fetch(`/api/workflow?projectPath=${encodeURIComponent(projectPath)}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'update', data: { steps, agentCommand, workingDirectory: projectPath } }),
+                body: JSON.stringify({ action: 'update', data: { steps, agentCommand, workingDirectory: projectPath, permissions } }),
             });
             await refreshWorkflow();
         } catch (err) { console.error(err); }
@@ -76,6 +79,42 @@ export function WorkflowEditor() {
                     ))}
                 </div>
                 <input type="text" value={agentCommand} onChange={e => setAgentCommand(e.target.value)} placeholder='Command template' className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm font-mono" />
+
+                <div className="mt-4 pt-4 border-t border-gray-700/50">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Shield className="w-4 h-4 text-gray-400" />
+                        <h3 className="text-sm font-medium">Permissions</h3>
+                    </div>
+                    <div className="flex gap-4">
+                        <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={permissions.allowShell}
+                                onChange={e => setPermissions({ ...permissions, allowShell: e.target.checked })}
+                                className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-indigo-500 focus:ring-indigo-500"
+                            />
+                            Allow Shell Commands
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={permissions.allowGit}
+                                onChange={e => setPermissions({ ...permissions, allowGit: e.target.checked })}
+                                className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-indigo-500 focus:ring-indigo-500"
+                            />
+                            Allow Git Operations
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={permissions.requireApproval}
+                                onChange={e => setPermissions({ ...permissions, requireApproval: e.target.checked })}
+                                className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-indigo-500 focus:ring-indigo-500"
+                            />
+                            Require Approval
+                        </label>
+                    </div>
+                </div>
             </div>
 
             <div className="space-y-3">

@@ -43,10 +43,17 @@ export interface WorkflowStep {
   enabled: boolean;
 }
 
+export interface WorkflowPermissions {
+  allowShell: boolean;
+  allowGit: boolean;
+  requireApproval: boolean;
+}
+
 export interface Workflow {
   steps: WorkflowStep[];
   agentCommand: string;
   workingDirectory: string;
+  permissions: WorkflowPermissions;
 }
 
 export interface ScheduledRun {

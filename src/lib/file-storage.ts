@@ -109,7 +109,12 @@ export async function initializeProject(projectPath: string, projectName: string
     await ensureProjectStructure(projectPath);
     const now = new Date().toISOString();
     await writeTasks(projectPath, { project: { name: projectName, path: projectPath, createdAt: now, lastModified: now }, epics: [] });
-    await writeWorkflow(projectPath, { steps: defaultSteps, agentCommand: 'claude -p "{{prompt}}"', workingDirectory: projectPath });
+    await writeWorkflow(projectPath, {
+        steps: defaultSteps,
+        agentCommand: 'claude -p "{{prompt}}"',
+        workingDirectory: projectPath,
+        permissions: { allowShell: true, allowGit: true, requireApproval: false }
+    });
     await writeSchedule(projectPath, { runs: [] });
     await fs.writeFile(path.join(projectPath, PROJECT_FILES.progress), `# Progress Log\n\nFor ${projectName}\n`, 'utf-8');
 }

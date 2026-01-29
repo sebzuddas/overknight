@@ -21,7 +21,7 @@
           "status": "failed",
           "branch": "main",
           "createdAt": "2026-01-29T16:23:23.027Z",
-          "completedAt": "2026-01-29T19:43:58.270Z"
+          "completedAt": "2026-01-29T19:53:53.422Z"
         },
         {
           "id": "task-1769703830018",
@@ -161,6 +161,26 @@
           "status": "pending",
           "branch": null,
           "createdAt": "2026-01-29T19:06:06.020Z",
+          "completedAt": null
+        },
+        {
+          "id": "task-1769716171086",
+          "title": "Adding skills via the skills thing. ",
+          "description": "",
+          "priority": 3,
+          "status": "pending",
+          "branch": null,
+          "createdAt": "2026-01-29T19:49:31.086Z",
+          "completedAt": null
+        },
+        {
+          "id": "task-1769716175765",
+          "title": "Adding MCPs conveniently. ",
+          "description": "",
+          "priority": 3,
+          "status": "pending",
+          "branch": null,
+          "createdAt": "2026-01-29T19:49:35.765Z",
           "completedAt": null
         }
       ],
