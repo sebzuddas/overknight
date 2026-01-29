@@ -26,13 +26,22 @@ export function WorkflowEditor() {
 
     useEffect(() => {
         if (workflow) {
-            setSteps(workflow.steps);
-            setAgentCommand(workflow.agentCommand);
-            if (workflow.permissions) setPermissions(workflow.permissions);
+            if (JSON.stringify(steps) !== JSON.stringify(workflow.steps)) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
+                setSteps(workflow.steps);
+            }
+            if (agentCommand !== workflow.agentCommand) {
+                setAgentCommand(workflow.agentCommand);
+            }
+            if (workflow.permissions && JSON.stringify(permissions) !== JSON.stringify(workflow.permissions)) {
+                setPermissions(workflow.permissions);
+            }
             const agent = DEFAULT_AGENTS.find(a => a.command === workflow.agentCommand);
-            setSelectedAgent(agent?.name || 'Custom');
+            if (selectedAgent !== (agent?.name || 'Custom')) {
+                setSelectedAgent(agent?.name || 'Custom');
+            }
         }
-    }, [workflow]);
+    }, [workflow, steps, agentCommand, permissions, selectedAgent]);
 
     const handleSave = async () => {
         if (!projectPath) return; // Note: simplified error handling for restore

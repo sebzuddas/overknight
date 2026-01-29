@@ -14,7 +14,7 @@ export function GitHistory() {
     const [currentBranch, setCurrentBranch] = useState<string>('');
     const [isRepo, setIsRepo] = useState(true);
 
-    const fetchData = async () => {
+    const fetchData = React.useCallback(async () => {
         if (!projectPath) return;
         try {
             const statusRes = await fetch(`/api/git?projectPath=${encodeURIComponent(projectPath)}&action=status`);
@@ -29,13 +29,14 @@ export function GitHistory() {
             const commitRes = await fetch(`/api/git?projectPath=${encodeURIComponent(projectPath)}&action=commits&count=10`);
             setCommits((await commitRes.json()).commits || []);
         } catch (err) { console.error(err); }
-    };
+    }, [projectPath, setIsRepo, setCurrentBranch, setBranches, setCommits]); // Added all state setters as dependencies
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
         fetchData();
         const interval = setInterval(fetchData, 10000);
         return () => clearInterval(interval);
-    }, [projectPath, isRunning]);
+    }, [fetchData, projectPath, isRunning]); // Added fetchData to dependencies
 
     const handleCheckout = async (branchName: string) => {
         if (!projectPath) return;

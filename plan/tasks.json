@@ -25,13 +25,15 @@
         },
         {
           "id": "task-1769703830018",
-          "title": "Add a gantt chart functionality where each task can be assigned",
+          "title": "Add a gantt chart functionality where each task can be assigned a time to build. ",
           "description": "",
           "priority": 3,
-          "status": "in-progress",
+          "status": "failed",
           "branch": "main",
           "createdAt": "2026-01-29T16:23:50.018Z",
-          "completedAt": "2026-01-29T19:19:10.353Z"
+          "completedAt": "2026-01-29T20:40:03.499Z",
+          "startDate": "2026-01-30T00:00:00.000Z",
+          "endDate": "2026-01-30T01:00:00.000Z"
         },
         {
           "id": "task-1769703838518",
@@ -41,7 +43,9 @@
           "status": "failed",
           "branch": "main",
           "createdAt": "2026-01-29T16:23:58.518Z",
-          "completedAt": null
+          "completedAt": null,
+          "startDate": "2026-02-01T00:00:00.000Z",
+          "endDate": "2026-02-01T01:00:00.000Z"
         },
         {
           "id": "task-1769704259191",
@@ -131,7 +135,7 @@
           "status": "in-progress",
           "branch": "main",
           "createdAt": "2026-01-29T16:29:49.522Z",
-          "completedAt": null
+          "completedAt": "2026-01-29T20:40:03.499Z"
         }
       ],
       "createdAt": "2026-01-29T16:08:58.071Z"
@@ -196,11 +200,21 @@
         {
           "id": "task-1769716175765",
           "title": "Adding MCPs conveniently. ",
-          "description": "",
+          "description": "The workflows panel should include a section with mcp servers. The user should be able to conveniently add mcp servers into the workspace. ",
           "priority": 3,
           "status": "pending",
           "branch": null,
           "createdAt": "2026-01-29T19:49:35.765Z",
+          "completedAt": null
+        },
+        {
+          "id": "task-1769719570276",
+          "title": "On startup, the agent should be able to infer the architecture of a project once it loads based on gathering it's context. ",
+          "description": "When loading a project, there should be a scan of the directory and the agent should infer the architecture of the software. The architectures should all be using draw.io and be in .xml format. ",
+          "priority": 3,
+          "status": "pending",
+          "branch": null,
+          "createdAt": "2026-01-29T20:46:10.276Z",
           "completedAt": null
         }
       ],

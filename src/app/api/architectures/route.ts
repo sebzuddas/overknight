@@ -35,6 +35,8 @@ export async function POST(request: NextRequest) {
 
         if (action === 'create' && data?.fileName) {
             const filePath = path.join(ARCHITECTURES_DIR, data.fileName);
+            const { templateUrl } = data; // Extract templateUrl
+
             // Check if file already exists
             try {
                 await fs.access(filePath);
@@ -43,8 +45,14 @@ export async function POST(request: NextRequest) {
                 // File does not exist, proceed to create
             }
 
-            // Minimal .drawio XML structure
-            const initialContent = `<mxfile host="app.diagrams.net" modified="${new Date().toISOString()}" agent="Gemini CLI" etag="" version="20.3.0" type="browser">
+            let fileContent = '';
+            if (templateUrl) {
+                try {
+                    const response = await fetch(templateUrl);
+                    if (!response.ok) {
+                        console.warn(`Failed to fetch template from ${templateUrl}. Status: ${response.status}`);
+                        // Fallback to blank diagram if template fetch fails
+                        fileContent = `<mxfile host="app.diagrams.net" modified="${new Date().toISOString()}" agent="Gemini CLI" etag="" version="20.3.0" type="browser">
   <diagram id="initial_diagram" name="Page-1">
     <mxGraphModel dx="1000" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
@@ -54,8 +62,38 @@ export async function POST(request: NextRequest) {
     </mxGraphModel>
   </diagram>
 </mxfile>`;
+                    } else {
+                        fileContent = await response.text();
+                    }
+                } catch (fetchError) {
+                    console.error(`Error fetching template from ${templateUrl}:`, fetchError);
+                    // Fallback to blank diagram on network error
+                    fileContent = `<mxfile host="app.diagrams.net" modified="${new Date().toISOString()}" agent="Gemini CLI" etag="" version="20.3.0" type="browser">
+  <diagram id="initial_diagram" name="Page-1">
+    <mxGraphModel dx="1000" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>`;
+                }
+            } else {
+                // Original minimal .drawio XML structure
+                fileContent = `<mxfile host="app.diagrams.net" modified="${new Date().toISOString()}" agent="Gemini CLI" etag="" version="20.3.0" type="browser">
+  <diagram id="initial_diagram" name="Page-1">
+    <mxGraphModel dx="1000" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>`;
+            }
 
-            await fs.writeFile(filePath, initialContent);
+            await fs.writeFile(filePath, fileContent);
             const newFile = {
                 name: data.fileName,
                 path: path.join('/docs/architectures', data.fileName).replace(/\\/g, '/'),

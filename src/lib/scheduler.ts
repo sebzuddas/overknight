@@ -1,7 +1,10 @@
 import schedule, { Job } from 'node-schedule';
-import { readSchedule, writeSchedule, readTasks } from './file-storage';
+import { readSchedule, writeSchedule, readTasks, writeTasks } from './file-storage';
 import { createAgentRunner, AgentRunner } from './agent-runner';
 import type { Schedule, ScheduledRun, Task } from './types';
+import path from 'path'; // Added for path operations
+import * as fs from 'fs'; // Added for fs.watch
+import { promises as fsPromises } from 'fs'; // Renamed to avoid conflict
 
 export interface SchedulerOptions {
     projectPath: string;
@@ -82,8 +85,6 @@ export class Scheduler {
         let allSuccessful = true;
         this.currentRunner = createAgentRunner({ projectPath: this.projectPath, onError: this.options.onError });
 
-        const path = require('path');
-        const fs = require('fs');
         const tasksJsonPath = path.join(this.projectPath, 'plan/tasks.json');
 
         for (const task of tasksToRun) {
@@ -156,8 +157,7 @@ export class Scheduler {
                 }
             }
             if (changed) {
-                // eslint-disable-next-line @typescript-eslint/no-var-requires
-                const { writeTasks } = require('./file-storage');
+
                 await writeTasks(this.projectPath, tasksData);
             }
         }

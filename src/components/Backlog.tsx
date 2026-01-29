@@ -312,9 +312,8 @@ function TaskItem({
             await updateTask(task.id, {
                 title: editTitle,
                 description: editDescription,
-                startDate: editStartDate || undefined,
-                endDate: editEndDate || undefined,
-                assignee: editAssignee || undefined,
+                startDate: editStartDate ? new Date(editStartDate).toISOString() : undefined,
+                endDate: editStartDate ? new Date(new Date(editStartDate).getTime() + 60 * 60 * 1000).toISOString() : undefined,
             });
             setIsEditing(false);
         }
@@ -337,31 +336,12 @@ function TaskItem({
                     placeholder="Task Description"
                 />
                 <div className="flex gap-2 items-center">
-                    <label className="text-gray-400 text-xs w-16 shrink-0">Start Date:</label>
+                    <label className="text-gray-400 text-xs w-16 shrink-0">Start Time:</label>
                     <input
-                        type="date"
+                        type="datetime-local"
                         value={editStartDate}
                         onChange={e => setEditStartDate(e.target.value)}
                         className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs w-full focus:outline-none focus:border-indigo-500"
-                    />
-                </div>
-                <div className="flex gap-2 items-center">
-                    <label className="text-gray-400 text-xs w-16 shrink-0">End Date:</label>
-                    <input
-                        type="date"
-                        value={editEndDate}
-                        onChange={e => setEditEndDate(e.target.value)}
-                        className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs w-full focus:outline-none focus:border-indigo-500"
-                    />
-                </div>
-                <div className="flex gap-2 items-center">
-                    <label className="text-gray-400 text-xs w-16 shrink-0">Assignee:</label>
-                    <input
-                        type="text"
-                        value={editAssignee}
-                        onChange={e => setEditAssignee(e.target.value)}
-                        className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs w-full focus:outline-none focus:border-indigo-500"
-                        placeholder="Assignee Name"
                     />
                 </div>
                 <div className="flex gap-2">

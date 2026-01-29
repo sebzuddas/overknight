@@ -31,7 +31,8 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts",
     "jest.config.js",
-    "jest.setup.js"
+    "jest.setup.js",
+    "src/types/**/*.d.ts"
   ],
   "exclude": ["node_modules"]
 }

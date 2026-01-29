@@ -2,6 +2,7 @@ import { spawn, ChildProcess } from 'child_process';
 import { GitManager, createGitManager } from './git-manager';
 import { readWorkflow, readTasks, writeTasks, appendProgress, appendTaskLog } from './file-storage';
 import type { Task, Workflow, WorkflowStep } from './types';
+import treeKill from 'tree-kill';
 
 export interface RunResult {
     success: boolean;
@@ -174,8 +175,6 @@ ${step.prompt}
         console.log(`[AgentRunner] Cancel called. PID: ${this.currentProcess?.pid}, Process exists: ${!!this.currentProcess}`);
         if (this.currentProcess && this.currentProcess.pid) {
             console.log(`[AgentRunner] Killing process tree: ${this.currentProcess.pid}`);
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const treeKill = require('tree-kill');
             treeKill(this.currentProcess.pid, 'SIGTERM', (err: Error) => {
                 if (err) console.error('[AgentRunner] Failed to kill process tree:', err);
                 else console.log('[AgentRunner] Process tree killed successfully');

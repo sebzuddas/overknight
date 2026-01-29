@@ -96,7 +96,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         return () => clearInterval(interval);
     }, [projectPath, isRunning, refreshRuns, refreshTasks]);
 
-    const post = useCallback(async (endpoint: string, action: string, data: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const post = useCallback(async (endpoint: string, action: string, data: Record<string, any>) => {
         if (!projectPath) throw new Error('No project selected');
         const res = await fetch(`${endpoint}?projectPath=${encodeURIComponent(projectPath)}`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, data })

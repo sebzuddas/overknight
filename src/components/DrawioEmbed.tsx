@@ -9,12 +9,38 @@ interface DrawioFile {
     path: string;
 }
 
+interface DiagramTemplate {
+    name: string;
+    url: string;
+}
+
+const predefinedTemplates: DiagramTemplate[] = [
+    { name: 'Blank Diagram', url: '' }, // Blank template
+    {
+        name: 'ERD',
+        url: 'https://raw.githubusercontent.com/jgraph/drawio-diagrams/dev/diagrams/schema.xml',
+    },
+    {
+        name: 'Class Diagram',
+        url: 'https://raw.githubusercontent.com/jgraph/drawio/dev/src/main/webapp/templates/basic/classes.xml',
+    },
+    {
+        name: 'Flowchart',
+        url: 'https://raw.githubusercontent.com/jgraph/drawio/dev/src/main/webapp/templates/basic/flowchart.xml',
+    },
+    {
+        name: 'Sequence Diagram',
+        url: 'https://raw.githubusercontent.com/jgraph/drawio-diagrams/dev/diagrams/basic/sequence.xml',
+    },
+];
+
 export function DrawioEmbed() {
     const { projectPath } = useProject();
     const [files, setFiles] = useState<DrawioFile[]>([]);
     const [selectedFile, setSelectedFile] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [newFileName, setNewFileName] = useState('');
+    const [selectedTemplateUrl, setSelectedTemplateUrl] = useState('');
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
     useEffect(() => {
@@ -35,7 +61,7 @@ export function DrawioEmbed() {
             const res = await fetch(`/api/architectures?projectPath=${encodeURIComponent(projectPath)}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'create', data: { fileName } }),
+                body: JSON.stringify({ action: 'create', data: { fileName, templateUrl: selectedTemplateUrl } }),
             });
 
             if (res.ok) {
@@ -51,7 +77,7 @@ export function DrawioEmbed() {
     };
 
     const drawioUrl = selectedFile
-        ? `https://embed.diagrams.net/?embed=1&ui=dark&spin=1&proto=json&saveAndExit=0&noSaveBtn=1`
+        ? `https://embed.diagrams.net/?embed=1&ui=dark&spin=1&proto=json&saveAndExit=0&noSaveBtn=1${selectedTemplateUrl ? `&create=${encodeURIComponent(selectedTemplateUrl)}` : ''}`
         : null;
 
     return (
@@ -103,6 +129,17 @@ export function DrawioEmbed() {
                             className="w-32 bg-gray-800 border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:border-indigo-500"
                             autoFocus
                         />
+                        <select
+                            value={selectedTemplateUrl}
+                            onChange={(e) => setSelectedTemplateUrl(e.target.value)}
+                            className="bg-gray-800 border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:border-indigo-500"
+                        >
+                            {predefinedTemplates.map((template) => (
+                                <option key={template.name} value={template.url}>
+                                    {template.name}
+                                </option>
+                            ))}
+                        </select>
                         <button onClick={handleCreateFile} className="p-1 bg-indigo-500 rounded text-xs">Add</button>
                         <button onClick={() => setIsCreating(false)} className="p-1 text-gray-400 hover:text-white">✕</button>
                     </div>
