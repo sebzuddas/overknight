@@ -17,3 +17,7 @@ Failed
 ## 2026-01-29T20:03:02.794Z - task-1769703803026: Rename the task board to be the 'backlog'
 Failed
 - Committed: 50ee1d61a37c2cc1864d32b1f5bb8b6b11a1523a
+
+## 2026-01-29T21:36:47.180Z - task-1769703838518: Add a kanban board functionality
+Failed
+- Committed: c7e48cba23acea515ebc90dc1149afeae713e73f
