@@ -267,6 +267,7 @@ function TaskItem({
     const [editStartDate, setEditStartDate] = useState(task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '');
     const [editAssignee, setEditAssignee] = useState(task.assignee || '');
     const [editWorkflowId, setEditWorkflowId] = useState(task.workflowId || '');
+    const [editWorkflowMandatory, setEditWorkflowMandatory] = useState(task.workflowMandatory || false);
     const [workflows, setWorkflows] = useState<Workflow[]>([]);
 
     React.useEffect(() => {
@@ -317,13 +318,19 @@ function TaskItem({
     };
 
     const handleSave = async () => {
+        if (editWorkflowMandatory && !editWorkflowId) {
+            alert('Workflow is mandatory for this task. Please select a workflow.');
+            return;
+        }
+
         if (editTitle.trim()) {
             await updateTask(task.id, {
                 title: editTitle,
                 description: editDescription,
                 startDate: editStartDate ? new Date(editStartDate).toISOString() : undefined,
                 endDate: editStartDate ? new Date(new Date(editStartDate).getTime() + 60 * 60 * 1000).toISOString() : undefined,
-                workflowId: editWorkflowId || undefined
+                workflowId: editWorkflowId || undefined,
+                workflowMandatory: editWorkflowMandatory,
             });
             setIsEditing(false);
         }
@@ -334,6 +341,7 @@ function TaskItem({
         setEditTitle(task.title);
         setEditDescription(task.description || '');
         setEditWorkflowId(task.workflowId || '');
+        setEditWorkflowMandatory(task.workflowMandatory || false);
         setEditStartDate(task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '');
     };
 
@@ -376,6 +384,16 @@ function TaskItem({
                             </option>
                         ))}
                     </select>
+                </div>
+                <div className="flex gap-2 items-center">
+                    <input
+                        type="checkbox"
+                        id={`workflowMandatory-${task.id}`}
+                        checked={editWorkflowMandatory}
+                        onChange={e => setEditWorkflowMandatory(e.target.checked)}
+                        className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
+                    />
+                    <label htmlFor={`workflowMandatory-${task.id}`} className="text-gray-400 text-xs">Workflow Mandatory</label>
                 </div>
                 <div className="flex gap-2">
                     <button onClick={handleSave} className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs hover:bg-green-500/30">Save</button>

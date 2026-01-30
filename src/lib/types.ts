@@ -23,6 +23,7 @@ export interface Task {
   endDate?: string;
   assignee?: string;
   workflowId?: string; // ID of the workflow to use for this task
+  workflowMandatory?: boolean;
 }
 
 export interface Epic {
@@ -74,7 +75,7 @@ export interface ScheduledRun {
 }
 
 export interface Schedule {
-  runs: ScheduledRun[];
+  runs: Schedule;
 }
 
 export interface ProgressEntry {

@@ -22,7 +22,9 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "simple-git": "^3.30.0",
-    "tree-kill": "^1.2.2"
+    "tree-kill": "^1.2.2",
+    "web-streams-polyfill": "^4.2.0",
+    "whatwg-fetch": "^3.6.20"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
