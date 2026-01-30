@@ -49,7 +49,7 @@ export async function readJsonFile<T>(projectPath: string, relativePath: string)
         const fullPath = path.join(projectPath, relativePath);
         const content = await fs.readFile(fullPath, 'utf-8');
         return JSON.parse(content) as T;
-    } catch (error) {
+    } catch {
         return null;
     }
 }

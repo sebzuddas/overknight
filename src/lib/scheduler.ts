@@ -1,10 +1,9 @@
 import schedule, { Job } from 'node-schedule';
 import { readSchedule, writeSchedule, readTasks, writeTasks } from './file-storage';
 import { createAgentRunner, AgentRunner } from './agent-runner';
-import type { Schedule, ScheduledRun, Task } from './types';
+import type { ScheduledRun, Task } from './types';
 import path from 'path'; // Added for path operations
 import * as fs from 'fs'; // Added for fs.watch
-import { promises as fsPromises } from 'fs'; // Renamed to avoid conflict
 
 export interface SchedulerOptions {
     projectPath: string;

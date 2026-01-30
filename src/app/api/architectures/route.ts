@@ -7,7 +7,6 @@ const ARCHITECTURES_DIR = path.join(process.cwd(), 'docs', 'architectures');
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const projectPath = searchParams.get('projectPath');
     const fileName = searchParams.get('fileName');
 
     // Ensure the architectures directory exists
@@ -43,8 +42,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const projectPath = searchParams.get('projectPath'); // Not strictly used for pathing but for consistency
     const { action, data } = await request.json();
 
     if (action === 'create' && data?.fileName) {
@@ -55,7 +52,7 @@ export async function POST(request: NextRequest) {
       try {
         await fs.access(filePath);
         return NextResponse.json({ message: 'File already exists' }, { status: 409 });
-      } catch (error) {
+      } catch {
         // File does not exist, proceed to create
       }
 
@@ -119,5 +116,31 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Failed to handle architecture file operation:', error);
     return NextResponse.json({ message: 'Failed to handle architecture file operation' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const fileName = searchParams.get('fileName');
+
+    if (!fileName) {
+      return NextResponse.json({ message: 'Filename required' }, { status: 400 });
+    }
+
+    const filePath = path.join(ARCHITECTURES_DIR, fileName);
+
+    // Check if file exists
+    try {
+      await fs.access(filePath);
+    } catch {
+      return NextResponse.json({ message: 'File not found' }, { status: 404 });
+    }
+
+    await fs.unlink(filePath);
+    return NextResponse.json({ success: true, message: 'File deleted' });
+  } catch (error) {
+    console.error('Failed to delete architecture file:', error);
+    return NextResponse.json({ message: 'Failed to delete architecture file' }, { status: 500 });
   }
 }

@@ -1,19 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Calendar, Clock, Play, StopCircle, RefreshCw, Trash2 } from 'lucide-react';
+import { Clock, RefreshCw } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 
 export function SchedulePanel() {
-    const { scheduledRuns, runTasks, scheduleRun, isRunning, refreshRuns } = useProject();
+    const { scheduledRuns, scheduleRun, refreshRuns } = useProject();
     const [selectedTime, setSelectedTime] = useState('');
-
-    const handleRunNow = async () => {
-        // For simplicity run all pending tasks? Or maybe UI should allow selection.
-        // Here we just trigger a run for all tasks usually, but api supports selection.
-        // Let's assume user wants to run filtered tasks based on status.
-        // For now, simpler: user defines tasks in board, here we just show runs.
-    };
 
     const pendingRuns = scheduledRuns.filter(r => r.status === 'pending');
 

@@ -1,17 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DndContext, closestCenter, DragOverlay, DragEndEvent } from '@dnd-kit/core';
+import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, Play, MoreVertical, CheckCircle2, Circle, XCircle, Loader2, GripVertical, Square, MessageSquare, ChevronDown, ArrowDown, Eye, EyeOff } from 'lucide-react';
+import { Plus, Play, CheckCircle2, Circle, XCircle, Loader2, GripVertical, Square, MessageSquare, ArrowDown, Eye, EyeOff } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 import type { Task, Epic, Workflow } from '@/lib/types';
 
 import { LogViewer } from './LogViewer';
 
 export function Backlog() {
-    const { tasksData, createEpic, createTask, updateTask, deleteTask, runTasks, reorderTasks } = useProject();
+    const { tasksData, createEpic, reorderTasks } = useProject();
     const [newConfirmEpic, setNewConfirmEpic] = useState(false);
     const [newEpicTitle, setNewEpicTitle] = useState('');
     const [newEpicDescription, setNewEpicDescription] = useState('');
@@ -265,7 +265,6 @@ function TaskItem({
     const [editTitle, setEditTitle] = useState(task.title);
     const [editDescription, setEditDescription] = useState(task.description || '');
     const [editStartDate, setEditStartDate] = useState(task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '');
-    const [editAssignee, setEditAssignee] = useState(task.assignee || '');
     const [editWorkflowId, setEditWorkflowId] = useState(task.workflowId || '');
     const [editWorkflowMandatory, setEditWorkflowMandatory] = useState(task.workflowMandatory || false);
     const [workflows, setWorkflows] = useState<Workflow[]>([]);

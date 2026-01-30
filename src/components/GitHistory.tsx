@@ -1,16 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { GitBranch, GitCommit, RotateCcw, ChevronRight } from 'lucide-react';
+import { GitBranch, GitCommit } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 
 interface Commit { hash: string; date: string; message: string; author: string; }
-interface Branch { name: string; current: boolean; commit: string; }
 
 export function GitHistory() {
     const { projectPath, isRunning } = useProject();
     const [commits, setCommits] = useState<Commit[]>([]);
-    const [branches, setBranches] = useState<Branch[]>([]);
     const [currentBranch, setCurrentBranch] = useState<string>('');
     const [isRepo, setIsRepo] = useState(true);
 
@@ -23,26 +21,17 @@ export function GitHistory() {
             setIsRepo(true);
             setCurrentBranch(statusData.branch || '');
 
-            const branchRes = await fetch(`/api/git?projectPath=${encodeURIComponent(projectPath)}&action=branches`);
-            setBranches((await branchRes.json()).branches || []);
-
             const commitRes = await fetch(`/api/git?projectPath=${encodeURIComponent(projectPath)}&action=commits&count=10`);
             setCommits((await commitRes.json()).commits || []);
         } catch (err) { console.error(err); }
-    }, [projectPath, setIsRepo, setCurrentBranch, setBranches, setCommits]); // Added all state setters as dependencies
+    }, [projectPath, setIsRepo, setCurrentBranch, setCommits]); // Added all state setters as dependencies
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
         fetchData();
         const interval = setInterval(fetchData, 10000);
         return () => clearInterval(interval);
     }, [fetchData, projectPath, isRunning]); // Added fetchData to dependencies
-
-    const handleCheckout = async (branchName: string) => {
-        if (!projectPath) return;
-        await fetch(`/api/git?projectPath=${encodeURIComponent(projectPath)}`, { method: 'POST', body: JSON.stringify({ action: 'checkout', data: { branchName } }) });
-        fetchData();
-    };
 
     const handleInitGit = async () => {
         if (!projectPath) return;

@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Moon, Sun, Sword, Menu, X } from 'lucide-react';
+import { Sword, Menu, X } from 'lucide-react';
 import { ProjectSelector } from '@/components/ProjectSelector';
 import { Backlog } from '@/components/Backlog';
 import { SchedulePanel } from '@/components/SchedulePanel';
 import { GitHistory } from '@/components/GitHistory';
 import { DrawioEmbed } from '@/components/DrawioEmbed';
-import { WorkflowEditor } from '@/components/WorkflowEditor'; // Keep for now or delete if unused, but we are replacing usage
+
 import WorkflowsPage from '@/app/workflows/page';
 import { GanttChart } from '@/components/GanttChart';
 import { useProject } from '@/context/ProjectContext';

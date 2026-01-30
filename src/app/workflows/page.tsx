@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useProject } from '@/context/ProjectContext';
 import { Workflow, WorkflowStep } from '@/lib/types';
-import { Plus, Trash2, Save, Edit, Play } from 'lucide-react';
+import { Plus, Trash2, Save, Edit } from 'lucide-react';
 
 const DEFAULT_STEPS: WorkflowStep[] = [
     { id: 'step-1', name: 'New Step', prompt: '', enabled: true }
@@ -17,13 +17,7 @@ export default function WorkflowsPage() {
     const [isLoading, setIsLoading] = useState(false);
 
     // Initial load
-    useEffect(() => {
-        if (projectPath) {
-            loadWorkflows();
-        }
-    }, [projectPath]);
-
-    const loadWorkflows = async () => {
+    const loadWorkflows = useCallback(async () => {
         if (!projectPath) return;
         try {
             const res = await fetch(`/api/workflows?projectPath=${encodeURIComponent(projectPath)}`);
@@ -36,7 +30,14 @@ export default function WorkflowsPage() {
         } catch (error) {
             console.error('Failed to load workflows', error);
         }
-    };
+    }, [projectPath]);
+
+    // Initial load
+    useEffect(() => {
+        if (projectPath) {
+            loadWorkflows();
+        }
+    }, [projectPath, loadWorkflows]);
 
     const handleCreate = () => {
         const newWorkflow: Workflow = {
@@ -95,7 +96,7 @@ export default function WorkflowsPage() {
         }
     };
 
-    const updateStep = (index: number, field: keyof WorkflowStep, value: any) => {
+    const updateStep = (index: number, field: keyof WorkflowStep, value: WorkflowStep[keyof WorkflowStep]) => {
         if (!selectedWorkflow) return;
         const newSteps = [...selectedWorkflow.steps];
         newSteps[index] = { ...newSteps[index], [field]: value };

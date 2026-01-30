@@ -75,7 +75,7 @@ export interface ScheduledRun {
 }
 
 export interface Schedule {
-  runs: Schedule;
+  runs: ScheduledRun[];
 }
 
 export interface ProgressEntry {

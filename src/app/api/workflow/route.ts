@@ -17,12 +17,18 @@ export async function POST(request: NextRequest) {
     const { action, data } = body;
 
     if (action === 'update') {
-        await writeWorkflow(projectPath, {
-            steps: data.steps,
-            agentCommand: data.agentCommand,
-            workingDirectory: data.workingDirectory || projectPath,
-            permissions: data.permissions || { allowShell: true, allowGit: true, requireApproval: false }
-        });
+        const existingWorkflow = await readWorkflow(projectPath);
+        if (!existingWorkflow) {
+            return NextResponse.json({ error: 'Workflow not found to update' }, { status: 404 });
+        }
+        const updatedWorkflow = {
+            ...existingWorkflow,
+            steps: data.steps || existingWorkflow.steps,
+            agentCommand: data.agentCommand || existingWorkflow.agentCommand,
+            workingDirectory: data.workingDirectory || existingWorkflow.workingDirectory || projectPath,
+            permissions: data.permissions || existingWorkflow.permissions || { allowShell: true, allowGit: true, requireApproval: false }
+        };
+        await writeWorkflow(projectPath, updatedWorkflow);
         return NextResponse.json(await readWorkflow(projectPath));
     }
 

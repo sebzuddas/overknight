@@ -1,7 +1,7 @@
 import { spawn, ChildProcess } from 'child_process';
 import { GitManager, createGitManager } from './git-manager';
 import { readWorkflow, readTasks, writeTasks, appendProgress, appendTaskLog } from './file-storage';
-import type { Task, Workflow, WorkflowStep } from './types';
+import type { Task, WorkflowStep } from './types';
 import treeKill from 'tree-kill';
 
 export interface RunResult {
@@ -64,7 +64,7 @@ export class AgentRunner {
             this.options.onStepStart?.(step);
             const startTime = Date.now();
             try {
-                const prompt = this.buildPrompt(step, task, workflow);
+                const prompt = this.buildPrompt(step, task);
                 const output = await this.invokeAgent(workflow.agentCommand, prompt);
                 const result = { stepId: step.id, stepName: step.name, success: true, output, duration: Date.now() - startTime };
                 stepResults.push(result);
@@ -93,11 +93,11 @@ export class AgentRunner {
             summary: allSuccessful ? `Completed ${stepResults.length} steps` : 'Failed',
             commitHash: commitHash || undefined,
         });
-
+        
         return { success: allSuccessful, branch, commitHash, steps: stepResults };
     }
 
-    private buildPrompt(step: WorkflowStep, task: Task, workflow: Workflow): string {
+    private buildPrompt(step: WorkflowStep, task: Task): string {
         return `
 # Task Context
 - Task ID: ${task.id}
@@ -117,7 +117,7 @@ ${step.prompt}
 
     private invokeAgent(commandTemplate: string, prompt: string): Promise<string> {
         return new Promise((resolve, reject) => {
-            const command = commandTemplate.replace('{{prompt}}', prompt.replace(/"/g, '\\"'));
+            const command = commandTemplate.replace('{{prompt}}', prompt.replace(/"/g, '\"'));
             console.log(`[AgentRunner] Executing command: ${command}`);
             // Fix: Pass full command string when using shell: true
             this.currentProcess = spawn(command, { cwd: this.projectPath, shell: true, env: { ...process.env } });

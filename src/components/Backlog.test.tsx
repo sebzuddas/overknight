@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Backlog } from './Backlog';
 import { useProject } from '@/context/ProjectContext';
-import type { Task, Epic, Workflow } from '@/lib/types';
+import type { Workflow } from '@/lib/types';
 
 // Mock the useProject context
 jest.mock('@/context/ProjectContext', () => ({

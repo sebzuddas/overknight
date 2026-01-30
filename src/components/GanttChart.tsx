@@ -3,7 +3,7 @@
 import React from 'react';
 import { Gantt as SVARGanttChart } from '@svar-ui/react-gantt';
 import { useProject } from '@/context/ProjectContext';
-import { Task, Epic } from '@/lib/types';
+
 
 import '@svar-ui/react-gantt/style.css';
 
