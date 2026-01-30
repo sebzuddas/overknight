@@ -1,7 +1,7 @@
 # Project State
 
-- Task: Implement the draw.io editor in the architectures window.
-- Status: In Progress
+- Task: Update documentation
+- Status: Completed
 - Last Updated: Friday, January 30, 2026
 
 ## Workflow Step: Check Architectures

@@ -62,10 +62,10 @@
           "title": "Functional vs non-functional optional forcing",
           "description": "",
           "priority": 3,
-          "status": "pending",
-          "branch": null,
+          "status": "failed",
+          "branch": "main",
           "createdAt": "2026-01-29T16:30:59.191Z",
-          "completedAt": null
+          "completedAt": "2026-01-30T17:33:20.144Z"
         },
         {
           "id": "task-1769713077222",
@@ -219,6 +219,38 @@
         }
       ],
       "createdAt": "2026-01-29T16:30:30.581Z"
+    },
+    {
+      "id": "epic-1769770709146",
+      "title": "Architecture Generation",
+      "description": "Tasks for generating and updating architecture diagrams",
+      "priority": 3,
+      "status": "pending",
+      "tasks": [
+        {
+          "id": "task-1769770709153",
+          "title": "Generate Block Diagram: Project-block-diagram.drawio",
+          "description": "Generate a Block Diagram diagram for Project-block-diagram.drawio.\nRequirements: A block diagram of the system",
+          "priority": 3,
+          "status": "pending",
+          "branch": null,
+          "createdAt": "2026-01-30T10:58:29.153Z",
+          "completedAt": null,
+          "workflowId": "architecture-generation"
+        },
+        {
+          "id": "task-1769771354841",
+          "title": "Generate Sequence Diagram: Project-block-diagram.drawio",
+          "description": "Generate a Sequence Diagram diagram for Project-block-diagram.drawio.\nRequirements: Make a sysml compliant sequence diagram for the key features of the project. ",
+          "priority": 3,
+          "status": "pending",
+          "branch": null,
+          "createdAt": "2026-01-30T11:09:14.841Z",
+          "completedAt": null,
+          "workflowId": "architecture-generation"
+        }
+      ],
+      "createdAt": "2026-01-30T10:58:29.146Z"
     }
   ]
 }
