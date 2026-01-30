@@ -24,6 +24,8 @@ export interface AgentRunnerOptions {
     projectPath: string;
     onStepStart?: (step: WorkflowStep) => void;
     onStepComplete?: (step: WorkflowStep, result: StepResult) => void;
+    onOutput?: (chunk: string) => void;
+    onStandardError?: (chunk: string) => void;
     onError?: (error: Error) => void;
 }
 
@@ -134,6 +136,7 @@ ${step.prompt}
                 console.log(`[AgentRunner] stdout: ${chunk}`);
                 stdout += chunk;
                 if (this.currentTaskId) appendTaskLog(this.projectPath, this.currentTaskId, chunk).catch(console.error);
+                this.options.onOutput?.(chunk);
 
                 // Check for completion message
                 if (chunk.includes("Task complete. All changes committed. I'm done.")) {
@@ -150,6 +153,7 @@ ${step.prompt}
                 console.log(`[AgentRunner] stderr: ${chunk}`);
                 stderr += chunk;
                 if (this.currentTaskId) appendTaskLog(this.projectPath, this.currentTaskId, chunk).catch(console.error);
+                this.options.onStandardError?.(chunk);
             });
 
             this.currentProcess.on('close', (code, signal) => {

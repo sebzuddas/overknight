@@ -94,7 +94,6 @@ export function Backlog() {
                     <LogViewer
                         taskId={viewingLogsForTask}
                         onClose={() => setViewingLogsForTask(null)}
-                        isLive={tasksData.epics.some(e => e.tasks.some(t => t.id === viewingLogsForTask && t.status === 'in-progress'))}
                     />
                 </div>
             )}

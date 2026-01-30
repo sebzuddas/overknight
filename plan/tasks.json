@@ -24,6 +24,16 @@
           "completedAt": "2026-01-29T20:30:36.792Z"
         },
         {
+          "id": "task-1769704339937",
+          "title": "there should be a tickbox next to each task that you want to confirm the agent to work on it",
+          "description": "",
+          "priority": 3,
+          "status": "completed",
+          "branch": null,
+          "createdAt": "2026-01-29T16:32:19.937Z",
+          "completedAt": "2026-01-30T10:10:56.147Z"
+        },
+        {
           "id": "task-1769703830018",
           "title": "Add a gantt chart functionality where each task can be assigned a time to build. ",
           "description": "",
@@ -58,18 +68,8 @@
           "completedAt": null
         },
         {
-          "id": "task-1769704339937",
-          "title": "there should be a tickbox next to each task that you want to confirm the agent to work on it",
-          "description": "",
-          "priority": 3,
-          "status": "pending",
-          "branch": null,
-          "createdAt": "2026-01-29T16:32:19.937Z",
-          "completedAt": null
-        },
-        {
           "id": "task-1769713077222",
-          "title": "Include a way to stop the agent whilst it's processing. ",
+          "title": "Include a robust way to stop the agent whilst it's processing. ",
           "description": "",
           "priority": 3,
           "status": "pending",

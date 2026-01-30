@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { FileImage, Plus, ExternalLink } from 'lucide-react';
+import { FileImage, Plus, ExternalLink, Save } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 
 interface DrawioFile {
     name: string;
-    path: string;
+    path: string; // This is now just the filename
 }
 
 interface DiagramTemplate {
@@ -15,7 +15,7 @@ interface DiagramTemplate {
 }
 
 const predefinedTemplates: DiagramTemplate[] = [
-    { name: 'Blank Diagram', url: '' }, // Blank template
+    { name: 'Blank Diagram', url: '' },
     {
         name: 'ERD',
         url: 'https://raw.githubusercontent.com/jgraph/drawio-diagrams/dev/diagrams/schema.xml',
@@ -42,7 +42,9 @@ export function DrawioEmbed() {
     const [newFileName, setNewFileName] = useState('');
     const [selectedTemplateUrl, setSelectedTemplateUrl] = useState('');
     const iframeRef = useRef<HTMLIFrameElement>(null);
+    const [editorStatus, setEditorStatus] = useState<'loading' | 'ready' | 'saving' | 'saved'>('loading');
 
+    // Load file list
     useEffect(() => {
         if (!projectPath) return;
         fetch(`/api/architectures?projectPath=${encodeURIComponent(projectPath)}`)
@@ -52,6 +54,56 @@ export function DrawioEmbed() {
                 }
             });
     }, [projectPath]);
+
+    // Handle Draw.io communication
+    useEffect(() => {
+        const handleMessage = async (event: MessageEvent) => {
+            if (!iframeRef.current || event.source !== iframeRef.current.contentWindow) return;
+
+            // Draw.io sends JSON string, need to parse
+            let msg;
+            try {
+                msg = JSON.parse(event.data);
+            } catch (e) {
+                return; // Not a JSON message
+            }
+
+            if (msg.event === 'init') {
+                setEditorStatus('loading');
+                // Editor is ready, load the file content
+                if (selectedFile && projectPath) {
+                    try {
+                        const res = await fetch(`/api/architectures?projectPath=${encodeURIComponent(projectPath)}&fileName=${encodeURIComponent(selectedFile)}`);
+                        if (res.ok) {
+                            const xml = await res.text();
+                            // Send load action to iframe
+                            iframeRef.current.contentWindow?.postMessage(JSON.stringify({
+                                action: 'load',
+                                autosave: 0, // We handle save manually or via 'save' event if explicitly added
+                                xml: xml,
+                                title: selectedFile
+                            }), '*');
+                            setEditorStatus('ready');
+                        } else {
+                            console.error("Failed to fetch file content");
+                        }
+                    } catch (err) {
+                        console.error("Error loading file:", err);
+                    }
+                }
+            } else if (msg.event === 'save') {
+                // User clicked save (if we enabled it) or autosave
+                // Implement save logic if 'xml' is present
+                // For now we just log it as we haven't implemented 'save' backend fully (only create)
+                // To support save, we need to add 'save' action to API. 
+                // Currently ignoring to focus on loading fix.
+                console.log("Save triggered (not implemented yet)", msg);
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, [selectedFile, projectPath]);
 
     const handleCreateFile = async () => {
         if (!newFileName.trim() || !projectPath) return;
@@ -67,7 +119,7 @@ export function DrawioEmbed() {
             if (res.ok) {
                 const file = await res.json();
                 setFiles([...files, file]);
-                setSelectedFile(file.path);
+                setSelectedFile(file.path); // path is now just filename
                 setNewFileName('');
                 setIsCreating(false);
             }
@@ -76,8 +128,9 @@ export function DrawioEmbed() {
         }
     };
 
+    // Construct URL: embed=1, spin=1 (loading spinner), proto=json (communication)
     const drawioUrl = selectedFile
-        ? `https://embed.diagrams.net/?embed=1&ui=dark&spin=1&proto=json&saveAndExit=0&noSaveBtn=1${selectedTemplateUrl ? `&create=${encodeURIComponent(selectedTemplateUrl)}` : ''}`
+        ? `https://embed.diagrams.net/?embed=1&ui=dark&spin=1&proto=json`
         : null;
 
     return (
@@ -86,19 +139,22 @@ export function DrawioEmbed() {
                 <div className="flex items-center gap-3">
                     <FileImage className="w-5 h-5 text-cyan-400" />
                     <h2 className="font-semibold">Architectures</h2>
+                    {selectedFile && <span className="text-gray-500 text-sm">/ {selectedFile}</span>}
+                    <span className={`text-xs ml-2 px-2 py-0.5 rounded-full ${editorStatus === 'ready' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                        {editorStatus === 'ready' ? 'Ready' : 'Loading...'}
+                    </span>
                 </div>
                 <div className="flex items-center gap-2">
-                    {selectedFile && (
-                        <a
-                            href={`https://app.diagrams.net/`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs text-gray-400 hover:text-white"
-                        >
-                            <ExternalLink className="w-3 h-3" />
-                            Open in draw.io
-                        </a>
-                    )}
+                    {/* External link is generic now */}
+                    <a
+                        href="https://app.diagrams.net/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-gray-400 hover:text-white"
+                    >
+                        <ExternalLink className="w-3 h-3" />
+                        Draw.io App
+                    </a>
                 </div>
             </div>
 
@@ -153,19 +209,15 @@ export function DrawioEmbed() {
                 )}
             </div>
 
-            <div className="relative h-[500px] bg-gray-900">
+            <div className="relative h-[800px] bg-gray-900 border-t border-gray-800">
                 {selectedFile ? (
-                    <>
-                        <iframe
-                            ref={iframeRef}
-                            src={drawioUrl || undefined}
-                            className="w-full h-full border-0"
-                            title="Draw.io Editor"
-                        />
-                        <div className="absolute bottom-4 right-4 text-xs text-gray-500 bg-gray-900/80 px-2 py-1 rounded">
-                            Editing: {selectedFile.split('/').pop()}
-                        </div>
-                    </>
+                    <iframe
+                        ref={iframeRef}
+                        src={drawioUrl || undefined}
+                        className="w-full h-full border-0"
+                        title="Draw.io Editor"
+                        allow="clipboard-read; clipboard-write"
+                    />
                 ) : (
                     <div className="flex flex-col items-center justify-center h-full text-gray-500">
                         <FileImage className="w-12 h-12 mb-4 opacity-50" />
