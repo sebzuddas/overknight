@@ -62,10 +62,10 @@
           "title": "Functional vs non-functional optional forcing",
           "description": "",
           "priority": 3,
-          "status": "failed",
+          "status": "completed",
           "branch": "main",
           "createdAt": "2026-01-29T16:30:59.191Z",
-          "completedAt": "2026-01-30T17:33:20.144Z"
+          "completedAt": "2026-01-30T17:45:59.748Z"
         },
         {
           "id": "task-1769713077222",
