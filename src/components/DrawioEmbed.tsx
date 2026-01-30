@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { FileImage, Plus, ExternalLink, Save } from 'lucide-react';
+import { FileImage, Plus, ExternalLink, Wand2 } from 'lucide-react';
+import type { Workflow } from '@/lib/types';
 import { useProject } from '@/context/ProjectContext';
 
 interface DrawioFile {
@@ -44,16 +45,99 @@ export function DrawioEmbed() {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [editorStatus, setEditorStatus] = useState<'loading' | 'ready' | 'saving' | 'saved'>('loading');
 
-    // Load file list
+    // Gen AI State
+    const [isGenModalOpen, setIsGenModalOpen] = useState(false);
+    const [genPrompt, setGenPrompt] = useState('');
+    const [genType, setGenType] = useState('Overview');
+    const [archWorkflowId, setArchWorkflowId] = useState<string | null>(null);
+
+    // Load file list & Find Architecture Workflow
     useEffect(() => {
         if (!projectPath) return;
+
+        // Fetch files
         fetch(`/api/architectures?projectPath=${encodeURIComponent(projectPath)}`)
-            .then(res => {
-                if (res.ok) {
-                    res.json().then(data => setFiles(data.files || []));
-                }
+            .then(res => res.ok && res.json().then(data => setFiles(data.files || [])));
+
+        // Fetch workflows to find the architecture one
+        fetch(`/api/workflows?projectPath=${encodeURIComponent(projectPath)}`)
+            .then(res => res.ok && res.json())
+            .then((workflows: Workflow[]) => {
+                const archWf = workflows.find(w => w.title.toLowerCase().includes('architecture') || w.title.toLowerCase().includes('diagram'));
+                if (archWf) setArchWorkflowId(archWf.id);
             });
     }, [projectPath]);
+
+    const handleGenerate = async () => {
+        if (!selectedFile || !archWorkflowId || !genPrompt || !projectPath) return;
+
+        try {
+            // Find or create an 'Architecture Generation' epic
+            let epicId = '';
+            // Fetch epics first
+            const tasksRes = await fetch(`/api/tasks?projectPath=${encodeURIComponent(projectPath)}`);
+            if (tasksRes.ok) {
+                const tasksData = await tasksRes.json();
+                const epics = tasksData.epics || [];
+                const epic = epics.find((e: any) => e.title === 'Architecture Generation');
+
+                if (epic) {
+                    epicId = epic.id;
+                } else {
+                    // Create Architecture Generation epic
+                    const createEpicRes = await fetch(`/api/tasks?projectPath=${encodeURIComponent(projectPath)}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'createEpic',
+                            data: {
+                                title: 'Architecture Generation',
+                                description: 'Tasks for generating and updating architecture diagrams'
+                            }
+                        })
+                    });
+
+                    if (createEpicRes.ok) {
+                        const newEpic = await createEpicRes.json();
+                        epicId = newEpic.id;
+                    } else if (epics.length > 0) {
+                        epicId = epics[0].id;
+                    }
+                }
+            }
+
+            if (!epicId) {
+                alert("Please create an Epic first to hold the generation task.");
+                return;
+            }
+
+            const taskTitle = `Generate ${genType}: ${selectedFile}`;
+            const taskDesc = `Generate a ${genType} diagram for ${selectedFile}.\nRequirements: ${genPrompt}`;
+
+            // Create Task
+            await fetch(`/api/tasks?projectPath=${encodeURIComponent(projectPath)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'createTask',
+                    data: {
+                        epicId,
+                        title: taskTitle,
+                        description: taskDesc,
+                        workflowId: archWorkflowId
+                    }
+                })
+            });
+
+            setIsGenModalOpen(false);
+            setGenPrompt('');
+            alert(`Task created: ${taskTitle}`);
+
+        } catch (e) {
+            console.error("Failed to generate task", e);
+            alert("Failed to create generation task.");
+        }
+    };
 
     // Handle Draw.io communication
     useEffect(() => {
@@ -92,11 +176,6 @@ export function DrawioEmbed() {
                     }
                 }
             } else if (msg.event === 'save') {
-                // User clicked save (if we enabled it) or autosave
-                // Implement save logic if 'xml' is present
-                // For now we just log it as we haven't implemented 'save' backend fully (only create)
-                // To support save, we need to add 'save' action to API. 
-                // Currently ignoring to focus on loading fix.
                 console.log("Save triggered (not implemented yet)", msg);
             }
         };
@@ -134,7 +213,7 @@ export function DrawioEmbed() {
         : null;
 
     return (
-        <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-xl border border-gray-700/50 overflow-hidden">
+        <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-xl border border-gray-700/50 overflow-hidden relative">
             <div className="flex items-center justify-between p-4 border-b border-gray-700/50">
                 <div className="flex items-center gap-3">
                     <FileImage className="w-5 h-5 text-cyan-400" />
@@ -145,7 +224,19 @@ export function DrawioEmbed() {
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
-                    {/* External link is generic now */}
+                    <button
+                        onClick={() => setIsGenModalOpen(true)}
+                        disabled={!selectedFile || !archWorkflowId}
+                        className={`
+                            flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
+                            ${selectedFile && archWorkflowId
+                                ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30'
+                                : 'bg-gray-800 text-gray-500 cursor-not-allowed'}
+                        `}
+                    >
+                        <Wand2 className="w-3.5 h-3.5" />
+                        Generate with Agent
+                    </button>
                     <a
                         href="https://app.diagrams.net/"
                         target="_blank"
@@ -225,6 +316,60 @@ export function DrawioEmbed() {
                     </div>
                 )}
             </div>
+
+            {isGenModalOpen && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+                    <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 w-96 max-w-full shadow-2xl">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <Wand2 className="w-5 h-5 text-purple-400" />
+                            Generate Architecture
+                        </h3>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1">Diagram Type</label>
+                                <select
+                                    value={genType}
+                                    onChange={(e) => setGenType(e.target.value)}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
+                                >
+                                    <option>Overview</option>
+                                    <option>Block Diagram</option>
+                                    <option>Sequence Diagram</option>
+                                    <option>Activity Diagram</option>
+                                    <option>State Machine</option>
+                                    <option>Use Case</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1">Requirements / Prompt</label>
+                                <textarea
+                                    value={genPrompt}
+                                    onChange={(e) => setGenPrompt(e.target.value)}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm min-h-[100px] focus:outline-none focus:border-purple-500"
+                                    placeholder="Describe the architecture you want to generate..."
+                                />
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    onClick={handleGenerate}
+                                    className="flex-1 bg-purple-600 hover:bg-purple-500 text-white rounded py-2 text-sm font-medium transition-colors"
+                                >
+                                    Generate
+                                </button>
+                                <button
+                                    onClick={() => setIsGenModalOpen(false)}
+                                    className="px-4 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded py-2 text-sm font-medium transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -6,7 +6,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS } from '@dnd-kit/utilities';
 import { Plus, Play, MoreVertical, CheckCircle2, Circle, XCircle, Loader2, GripVertical, Square, MessageSquare, ChevronDown, ArrowDown, Eye, EyeOff } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
-import type { Task, Epic } from '@/lib/types';
+import type { Task, Epic, Workflow } from '@/lib/types';
 
 import { LogViewer } from './LogViewer';
 
@@ -260,13 +260,23 @@ function TaskItem({
     onToggleSelection: () => void;
     isLast: boolean;
 }) {
-    const { runTasks, cancelCurrentRun, updateTask } = useProject();
+    const { runTasks, cancelCurrentRun, updateTask, projectPath } = useProject();
     const [isEditing, setIsEditing] = useState(false);
     const [editTitle, setEditTitle] = useState(task.title);
     const [editDescription, setEditDescription] = useState(task.description || '');
     const [editStartDate, setEditStartDate] = useState(task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '');
-    const [editEndDate, setEditEndDate] = useState(task.endDate ? new Date(task.endDate).toISOString().split('T')[0] : '');
     const [editAssignee, setEditAssignee] = useState(task.assignee || '');
+    const [editWorkflowId, setEditWorkflowId] = useState(task.workflowId || '');
+    const [workflows, setWorkflows] = useState<Workflow[]>([]);
+
+    React.useEffect(() => {
+        if (projectPath && isEditing) {
+            fetch(`/api/workflows?projectPath=${encodeURIComponent(projectPath)}`)
+                .then(res => res.json())
+                .then(data => setWorkflows(data))
+                .catch(err => console.error(err));
+        }
+    }, [projectPath, isEditing]);
 
     const {
         attributes,
@@ -313,9 +323,18 @@ function TaskItem({
                 description: editDescription,
                 startDate: editStartDate ? new Date(editStartDate).toISOString() : undefined,
                 endDate: editStartDate ? new Date(new Date(editStartDate).getTime() + 60 * 60 * 1000).toISOString() : undefined,
+                workflowId: editWorkflowId || undefined
             });
             setIsEditing(false);
         }
+    };
+
+    const startEditing = () => {
+        setIsEditing(true);
+        setEditTitle(task.title);
+        setEditDescription(task.description || '');
+        setEditWorkflowId(task.workflowId || '');
+        setEditStartDate(task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '');
     };
 
     if (isEditing) {
@@ -342,6 +361,21 @@ function TaskItem({
                         onChange={e => setEditStartDate(e.target.value)}
                         className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs w-full focus:outline-none focus:border-indigo-500"
                     />
+                </div>
+                <div className="flex gap-2 items-center">
+                    <label className="text-gray-400 text-xs w-16 shrink-0">Workflow:</label>
+                    <select
+                        value={editWorkflowId}
+                        onChange={e => setEditWorkflowId(e.target.value)}
+                        className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs w-full focus:outline-none focus:border-indigo-500"
+                    >
+                        <option value="">Default Workflow</option>
+                        {workflows.map(wf => (
+                            <option key={wf.id} value={wf.id}>
+                                {wf.title}{wf.isDefault ? ' (Default)' : ''}
+                            </option>
+                        ))}
+                    </select>
                 </div>
                 <div className="flex gap-2">
                     <button onClick={handleSave} className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs hover:bg-green-500/30">Save</button>
@@ -392,7 +426,7 @@ function TaskItem({
                     <StatusIcon className={`w-4 h-4 ${statusColors[task.status]} ${task.status === 'in-progress' ? 'animate-spin' : ''}`} />
                 </div>
                 <span
-                    onClick={() => { setIsEditing(true); setEditTitle(task.title); setEditDescription(task.description || ''); }}
+                    onClick={startEditing}
                     className={`flex-1 text-sm cursor-pointer hover:text-indigo-400 transition-colors ${task.status === 'completed' ? 'text-gray-500 line-through decoration-gray-600' : ''}`}
                 >
                     {task.title}
@@ -419,7 +453,7 @@ function TaskItem({
                 </div>
             </div>
             {task.description && (
-                <div className="pl-14 text-xs text-gray-500 line-clamp-2" onClick={() => { setIsEditing(true); setEditTitle(task.title); setEditDescription(task.description || ''); }}>
+                <div className="pl-14 text-xs text-gray-500 line-clamp-2" onClick={startEditing}>
                     {task.description}
                 </div>
             )}

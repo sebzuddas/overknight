@@ -22,6 +22,7 @@ export interface Task {
   startDate?: string;
   endDate?: string;
   assignee?: string;
+  workflowId?: string; // ID of the workflow to use for this task
 }
 
 export interface Epic {
@@ -54,10 +55,14 @@ export interface WorkflowPermissions {
 }
 
 export interface Workflow {
+  id: string; // Unique ID
+  title: string; // Human readable title
+  description?: string;
   steps: WorkflowStep[];
   agentCommand: string;
   workingDirectory: string;
   permissions: WorkflowPermissions;
+  isDefault?: boolean;
 }
 
 export interface ScheduledRun {

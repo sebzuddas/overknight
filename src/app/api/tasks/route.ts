@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
         case 'createTask': {
             const epic = tasksData.epics.find(e => e.id === data.epicId);
             if (!epic) return NextResponse.json({ error: 'Epic not found' }, { status: 404 });
-            const newTask: Task = { id: `task-${Date.now()}`, title: data.title, description: data.description || '', priority: data.priority || 3, status: 'pending', branch: null, createdAt: new Date().toISOString(), completedAt: null, startDate: data.startDate || undefined, endDate: data.endDate || undefined, assignee: data.assignee || undefined };
+            const newTask: Task = { id: `task-${Date.now()}`, title: data.title, description: data.description || '', priority: data.priority || 3, status: 'pending', branch: null, createdAt: new Date().toISOString(), completedAt: null, startDate: data.startDate || undefined, endDate: data.endDate || undefined, assignee: data.assignee || undefined, workflowId: data.workflowId || undefined };
             epic.tasks.push(newTask);
             await writeTasks(projectPath, tasksData);
             return NextResponse.json(newTask);

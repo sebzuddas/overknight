@@ -8,7 +8,8 @@ const ARCHITECTURES_DIR = 'docs/architectures';
 
 export const PROJECT_FILES = {
     tasks: `${PLAN_DIR}/tasks.json`,
-    workflow: `${PLAN_DIR}/workflow.json`,
+    workflow: `${PLAN_DIR}/workflow.json`, // Legacy single workflow
+    workflows: `${PLAN_DIR}/workflows.json`, // New multi workflow
     schedule: `${PLAN_DIR}/schedule.json`,
     progress: `${PLAN_DIR}/progress.md`,
     logs: `${PLAN_DIR}/logs`, // Directory for logs
@@ -77,6 +78,59 @@ export async function writeWorkflow(projectPath: string, data: Workflow): Promis
     return writeJsonFile(projectPath, PROJECT_FILES.workflow, data);
 }
 
+export async function readWorkflows(projectPath: string): Promise<Workflow[]> {
+    let workflows = await readJsonFile<Workflow[]>(projectPath, PROJECT_FILES.workflows);
+
+    // Migration: If no workflows.json but workflow.json exists, migrate it
+    if (!workflows) {
+        const legacyWorkflow = await readWorkflow(projectPath);
+        if (legacyWorkflow) {
+            // Assign a default ID if missing
+            const migrated: Workflow = {
+                ...legacyWorkflow,
+                id: 'default',
+                title: 'Default Workflow',
+                description: 'Migrated legacy workflow',
+                isDefault: true
+            };
+            workflows = [migrated];
+            await writeWorkflows(projectPath, workflows);
+        } else {
+            workflows = [];
+        }
+    }
+    return workflows;
+}
+
+export async function writeWorkflows(projectPath: string, data: Workflow[]): Promise<void> {
+    return writeJsonFile(projectPath, PROJECT_FILES.workflows, data);
+}
+
+export async function saveWorkflow(projectPath: string, workflow: Workflow): Promise<void> {
+    const workflows = await readWorkflows(projectPath);
+    const index = workflows.findIndex(w => w.id === workflow.id);
+    if (index >= 0) {
+        workflows[index] = workflow;
+    } else {
+        workflows.push(workflow);
+    }
+
+    // Ensure unique default
+    if (workflow.isDefault) {
+        workflows.forEach(w => {
+            if (w.id !== workflow.id) w.isDefault = false;
+        });
+    }
+
+    await writeWorkflows(projectPath, workflows);
+}
+
+export async function deleteWorkflow(projectPath: string, workflowId: string): Promise<void> {
+    const workflows = await readWorkflows(projectPath);
+    const filtered = workflows.filter(w => w.id !== workflowId);
+    await writeWorkflows(projectPath, filtered);
+}
+
 export async function readSchedule(projectPath: string): Promise<Schedule | null> {
     return readJsonFile<Schedule>(projectPath, PROJECT_FILES.schedule);
 }
@@ -110,6 +164,10 @@ export async function initializeProject(projectPath: string, projectName: string
     const now = new Date().toISOString();
     await writeTasks(projectPath, { project: { name: projectName, path: projectPath, createdAt: now, lastModified: now }, epics: [] });
     await writeWorkflow(projectPath, {
+        id: 'default',
+        title: 'Default Workflow',
+        description: 'Standard workflow',
+        isDefault: true,
         steps: defaultSteps,
         agentCommand: 'claude -p "{{prompt}}"',
         workingDirectory: projectPath,
