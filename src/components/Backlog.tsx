@@ -6,7 +6,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS } from '@dnd-kit/utilities';
 import { Plus, Play, CheckCircle2, Circle, XCircle, Loader2, GripVertical, Square, MessageSquare, ArrowDown, Eye, EyeOff } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
-import type { Task, Epic, Workflow } from '@/lib/types';
+import type { Task, Epic, Workflow, DEFAULT_AGENTS } from '@/lib/types';
 
 import { LogViewer } from './LogViewer';
 
@@ -267,6 +267,7 @@ function TaskItem({
     const [editStartDate, setEditStartDate] = useState(task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '');
     const [editWorkflowId, setEditWorkflowId] = useState(task.workflowId || '');
     const [editWorkflowMandatory, setEditWorkflowMandatory] = useState(task.workflowMandatory || false);
+    const [editAgent, setEditAgent] = useState(task.agent || '');
     const [workflows, setWorkflows] = useState<Workflow[]>([]);
 
     React.useEffect(() => {
@@ -330,6 +331,7 @@ function TaskItem({
                 endDate: editStartDate ? new Date(new Date(editStartDate).getTime() + 60 * 60 * 1000).toISOString() : undefined,
                 workflowId: editWorkflowId || undefined,
                 workflowMandatory: editWorkflowMandatory,
+                agent: editAgent || undefined,
             });
             setIsEditing(false);
         }
@@ -342,6 +344,7 @@ function TaskItem({
         setEditWorkflowId(task.workflowId || '');
         setEditWorkflowMandatory(task.workflowMandatory || false);
         setEditStartDate(task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '');
+        setEditAgent(task.agent || '');
     };
 
     if (isEditing) {
@@ -380,6 +383,21 @@ function TaskItem({
                         {workflows.map(wf => (
                             <option key={wf.id} value={wf.id}>
                                 {wf.title}{wf.isDefault ? ' (Default)' : ''}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className="flex gap-2 items-center">
+                    <label className="text-gray-400 text-xs w-16 shrink-0">Agent:</label>
+                    <select
+                        value={editAgent}
+                        onChange={e => setEditAgent(e.target.value)}
+                        className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs w-full focus:outline-none focus:border-indigo-500"
+                    >
+                        <option value="">Default Agent</option>
+                        {DEFAULT_AGENTS.map(agent => (
+                            <option key={agent.name} value={agent.name}>
+                                {agent.name}
                             </option>
                         ))}
                     </select>

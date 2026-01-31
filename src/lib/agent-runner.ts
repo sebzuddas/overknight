@@ -1,7 +1,7 @@
 import { spawn, ChildProcess } from 'child_process';
 import { GitManager, createGitManager } from './git-manager';
 import { readWorkflow, readTasks, writeTasks, appendProgress, appendTaskLog } from './file-storage';
-import type { Task, WorkflowStep } from './types';
+import type { Task, WorkflowStep, AgentConfig, DEFAULT_AGENTS } from './types';
 import treeKill from 'tree-kill';
 
 export interface RunResult {
@@ -22,6 +22,7 @@ export interface StepResult {
 
 export interface AgentRunnerOptions {
     projectPath: string;
+    availableAgents: AgentConfig[];
     onStepStart?: (step: WorkflowStep) => void;
     onStepComplete?: (step: WorkflowStep, result: StepResult) => void;
     onOutput?: (chunk: string) => void;
@@ -35,11 +36,13 @@ export class AgentRunner {
     private options: AgentRunnerOptions;
     private currentProcess: ChildProcess | null = null;
     private currentTaskId: string | null = null;
+    private availableAgents: AgentConfig[];
 
     constructor(options: AgentRunnerOptions) {
         this.projectPath = options.projectPath;
         this.gitManager = createGitManager(options.projectPath);
         this.options = options;
+        this.availableAgents = options.availableAgents;
     }
 
     async runTask(task: Task): Promise<RunResult> {
@@ -47,6 +50,13 @@ export class AgentRunner {
         const workflow = await readWorkflow(this.projectPath);
         if (!workflow) {
             return { success: false, branch: '', commitHash: null, steps: [], error: 'No workflow found' };
+        }
+
+        const agentToUseName = task.agent || workflow.agent || DEFAULT_AGENTS[0].name;
+        const agentConfig = this.availableAgents.find(a => a.name === agentToUseName);
+
+        if (!agentConfig) {
+            return { success: false, branch: '', commitHash: null, steps: [], error: `Agent "${agentToUseName}" not found.` };
         }
 
         await this.gitManager.initIfNeeded();
@@ -65,7 +75,7 @@ export class AgentRunner {
             const startTime = Date.now();
             try {
                 const prompt = this.buildPrompt(step, task);
-                const output = await this.invokeAgent(workflow.agentCommand, prompt);
+                const output = await this.invokeAgent(agentConfig, prompt);
                 const result = { stepId: step.id, stepName: step.name, success: true, output, duration: Date.now() - startTime };
                 stepResults.push(result);
                 this.options.onStepComplete?.(step, result);
@@ -115,9 +125,9 @@ ${step.prompt}
 `.trim();
     }
 
-    private invokeAgent(commandTemplate: string, prompt: string): Promise<string> {
+    private invokeAgent(agentConfig: AgentConfig, prompt: string): Promise<string> {
         return new Promise((resolve, reject) => {
-            const command = commandTemplate.replace('{{prompt}}', prompt.replace(/"/g, '\"'));
+            const command = agentConfig.command.replace('{{prompt}}', prompt.replace(/"/g, '\"'));
             console.log(`[AgentRunner] Executing command: ${command}`);
             // Fix: Pass full command string when using shell: true
             this.currentProcess = spawn(command, { cwd: this.projectPath, shell: true, env: { ...process.env } });
@@ -125,7 +135,7 @@ ${step.prompt}
             // Initialize log file
             if (this.currentTaskId) {
                 console.log(`[AgentRunner] Initializing log for task: ${this.currentTaskId}`);
-                appendTaskLog(this.projectPath, this.currentTaskId, `\n--- Executing: ${commandTemplate} ---\n`).catch(console.error);
+                appendTaskLog(this.projectPath, this.currentTaskId, `\n--- Executing: ${agentConfig.command} ---\n`).catch(console.error);
             }
 
             let stdout = '', stderr = '';

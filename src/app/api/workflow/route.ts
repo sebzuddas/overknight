@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readWorkflow, writeWorkflow, isValidProject } from '@/lib/file-storage';
-import { DEFAULT_WORKFLOW_STEPS, DEFAULT_AGENTS } from '@/lib/types';
+import { DEFAULT_WORKFLOW_STEPS } from '@/lib/types';
 import type { WorkflowStep } from '@/lib/types';
 
 export async function GET(request: NextRequest) {
     const projectPath = request.nextUrl.searchParams.get('projectPath');
     if (!projectPath || !(await isValidProject(projectPath))) return NextResponse.json({ error: 'Invalid project path' }, { status: 400 });
     const workflow = await readWorkflow(projectPath);
-    return NextResponse.json(workflow || { steps: DEFAULT_WORKFLOW_STEPS, agentCommand: DEFAULT_AGENTS[0].command, workingDirectory: projectPath });
+    return NextResponse.json(workflow || { steps: DEFAULT_WORKFLOW_STEPS, agent: DEFAULT_AGENTS[0].name, workingDirectory: projectPath });
 }
 
 export async function POST(request: NextRequest) {
@@ -24,9 +24,9 @@ export async function POST(request: NextRequest) {
         const updatedWorkflow = {
             ...existingWorkflow,
             steps: data.steps || existingWorkflow.steps,
-            agentCommand: data.agentCommand || existingWorkflow.agentCommand,
             workingDirectory: data.workingDirectory || existingWorkflow.workingDirectory || projectPath,
-            permissions: data.permissions || existingWorkflow.permissions || { allowShell: true, allowGit: true, requireApproval: false }
+            permissions: data.permissions || existingWorkflow.permissions || { allowShell: true, allowGit: true, requireApproval: false },
+            agent: data.agent || existingWorkflow.agent,
         };
         await writeWorkflow(projectPath, updatedWorkflow);
         return NextResponse.json(await readWorkflow(projectPath));
@@ -56,11 +56,6 @@ export async function POST(request: NextRequest) {
         case 'reorderSteps': {
             const stepMap = new Map(workflow.steps.map(s => [s.id, s]));
             workflow.steps = data.stepIds.map((id: string) => stepMap.get(id)).filter(Boolean) as WorkflowStep[];
-            await writeWorkflow(projectPath, workflow);
-            return NextResponse.json({ success: true });
-        }
-        case 'setAgentCommand': {
-            workflow.agentCommand = data.command;
             await writeWorkflow(projectPath, workflow);
             return NextResponse.json({ success: true });
         }

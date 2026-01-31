@@ -3,20 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, GripVertical, Plus, Trash2, ToggleLeft, ToggleRight, Terminal, Shield } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
-import type { WorkflowStep } from '@/lib/types';
-
-const DEFAULT_AGENTS = [
-    { name: 'Claude Code', command: 'claude -p "{{prompt}}"', description: 'Anthropic Claude Code CLI' },
-    { name: 'Gemini CLI', command: 'gemini -p "{{prompt}}"', description: 'Google Gemini CLI' },
-    { name: 'Cursor', command: 'cursor --agent "{{prompt}}"', description: 'Cursor IDE Agent' },
-    { name: 'Custom', command: '', description: 'Custom agent command' },
-];
+import type { WorkflowStep, DEFAULT_AGENTS } from '@/lib/types';
 
 export function WorkflowEditor() {
     const { projectPath, workflow, refreshWorkflow } = useProject();
     const [steps, setSteps] = useState<WorkflowStep[]>([]);
-    const [agentCommand, setAgentCommand] = useState('');
-    const [selectedAgent, setSelectedAgent] = useState('Claude Code');
+    const [selectedAgentName, setSelectedAgentName] = useState<string>('');
     const [editingStep, setEditingStep] = useState<string | null>(null);
     const [isAddingStep, setIsAddingStep] = useState(false);
     const [newStepName, setNewStepName] = useState('');
@@ -30,18 +22,14 @@ export function WorkflowEditor() {
                 // eslint-disable-next-line react-hooks/set-state-in-effect
                 setSteps(workflow.steps);
             }
-            if (agentCommand !== workflow.agentCommand) {
-                setAgentCommand(workflow.agentCommand);
-            }
             if (workflow.permissions && JSON.stringify(permissions) !== JSON.stringify(workflow.permissions)) {
                 setPermissions(workflow.permissions);
             }
-            const agent = DEFAULT_AGENTS.find(a => a.command === workflow.agentCommand);
-            if (selectedAgent !== (agent?.name || 'Custom')) {
-                setSelectedAgent(agent?.name || 'Custom');
+            if (selectedAgentName !== (workflow.agent || DEFAULT_AGENTS[0].name)) {
+                setSelectedAgentName(workflow.agent || DEFAULT_AGENTS[0].name);
             }
         }
-    }, [workflow, steps, agentCommand, permissions, selectedAgent]);
+    }, [workflow, steps, permissions, selectedAgentName]);
 
     const handleSave = async () => {
         if (!projectPath) return; // Note: simplified error handling for restore
@@ -49,7 +37,7 @@ export function WorkflowEditor() {
             await fetch(`/api/workflow?projectPath=${encodeURIComponent(projectPath)}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'update', data: { steps, agentCommand, workingDirectory: projectPath, permissions } }),
+                body: JSON.stringify({ action: 'update', data: { steps, agent: selectedAgentName, workingDirectory: projectPath, permissions } }),
             });
             await refreshWorkflow();
         } catch (err) { console.error(err); }
@@ -66,9 +54,7 @@ export function WorkflowEditor() {
 
     const handleRemoveStep = (stepId: string) => setSteps(steps.filter(s => s.id !== stepId));
     const handleAgentChange = (agentName: string) => {
-        setSelectedAgent(agentName);
-        const agent = DEFAULT_AGENTS.find(a => a.name === agentName);
-        if (agent?.command) setAgentCommand(agent.command);
+        setSelectedAgentName(agentName);
     };
 
     return (
@@ -82,12 +68,11 @@ export function WorkflowEditor() {
                 <div className="flex items-center gap-2 mb-3"><Terminal className="w-4 h-4 text-gray-400" /><h3 className="text-sm font-medium">Agent CLI</h3></div>
                 <div className="grid grid-cols-2 gap-2 mb-3">
                     {DEFAULT_AGENTS.map(agent => (
-                        <button key={agent.name} onClick={() => handleAgentChange(agent.name)} className={`p-2 text-left text-sm rounded-lg border transition-all ${selectedAgent === agent.name ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-400' : 'bg-gray-800/50 border-gray-700'}`}>
+                        <button key={agent.name} onClick={() => handleAgentChange(agent.name)} className={`p-2 text-left text-sm rounded-lg border transition-all ${selectedAgentName === agent.name ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-400' : 'bg-gray-800/50 border-gray-700'}`}>
                             <div className="font-medium">{agent.name}</div><div className="text-xs text-gray-500">{agent.description}</div>
                         </button>
                     ))}
                 </div>
-                <input type="text" value={agentCommand} onChange={e => setAgentCommand(e.target.value)} placeholder='Command template' className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm font-mono" />
 
                 <div className="mt-4 pt-4 border-t border-gray-700/50">
                     <div className="flex items-center gap-2 mb-3">

@@ -1,7 +1,7 @@
 import schedule, { Job } from 'node-schedule';
 import { readSchedule, writeSchedule, readTasks, writeTasks } from './file-storage';
 import { createAgentRunner, AgentRunner } from './agent-runner';
-import type { ScheduledRun, Task } from './types';
+import type { ScheduledRun, Task, DEFAULT_AGENTS } from './types';
 import path from 'path'; // Added for path operations
 import * as fs from 'fs'; // Added for fs.watch
 
@@ -82,7 +82,7 @@ export class Scheduler {
         tasksToRun.sort((a, b) => a.priority - b.priority);
 
         let allSuccessful = true;
-        this.currentRunner = createAgentRunner({ projectPath: this.projectPath, onError: this.options.onError });
+        this.currentRunner = createAgentRunner({ projectPath: this.projectPath, onError: this.options.onError, availableAgents: DEFAULT_AGENTS });
 
         const tasksJsonPath = path.join(this.projectPath, 'plan/tasks.json');
 

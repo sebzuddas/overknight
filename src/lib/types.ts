@@ -24,6 +24,7 @@ export interface Task {
   assignee?: string;
   workflowId?: string; // ID of the workflow to use for this task
   workflowMandatory?: boolean;
+  agent?: string;
 }
 
 export interface Epic {
@@ -60,10 +61,10 @@ export interface Workflow {
   title: string; // Human readable title
   description?: string;
   steps: WorkflowStep[];
-  agentCommand: string;
   workingDirectory: string;
   permissions: WorkflowPermissions;
   isDefault?: boolean;
+  agent?: string;
 }
 
 export interface ScheduledRun {
