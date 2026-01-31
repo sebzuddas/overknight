@@ -96,6 +96,26 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         return () => clearInterval(interval);
     }, [projectPath, isRunning, refreshRuns, refreshTasks]);
 
+    useEffect(() => {
+        const timer = setInterval(() => {
+            if (!tasksData || isRunning) return;
+
+            const now = new Date();
+            for (const epic of tasksData.epics) {
+                for (const task of epic.tasks) {
+                    if (task.startDate && new Date(task.startDate) <= now && task.status === 'pending') {
+                        console.log(`Running scheduled task: ${task.title}`);
+                        runTasks([task.id]);
+                        // Optimistically update the status
+                        updateTask(task.id, { status: 'in-progress' });
+                    }
+                }
+            }
+        }, 1000); // Check every second
+
+        return () => clearInterval(timer);
+    }, [tasksData, isRunning, runTasks, updateTask]);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const post = useCallback(async (endpoint: string, action: string, data: Record<string, any>) => {
         if (!projectPath) throw new Error('No project selected');
