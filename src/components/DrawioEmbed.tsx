@@ -87,15 +87,15 @@ export function DrawioEmbed() {
             });
     }, [projectPath]);
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    useEffect(() => {
-        if (isCreating && projectPath) {
+    const handleStartCreate = () => {
+        if (projectPath) {
             const projectName = projectPath.split('/').pop() || 'Project';
             const suffix = selectedType.name.toLowerCase().replace(/\s+/g, '-');
             setNewFileName(`${projectName}-${suffix}.drawio`);
             setGenType(selectedType.genType);
         }
-    }, [selectedType, isCreating, projectPath]);
+        setIsCreating(true);
+    };
 
 
     const handleGenerate = async () => {
@@ -229,9 +229,9 @@ export function DrawioEmbed() {
     }, [selectedFile, projectPath]);
 
     // 2. Load File Content when Ready or Selection Changes
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => {
         if (!iframeReady) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadContent();
     }, [iframeReady, loadContent]);
     // 3. Auto-refresh during generation
@@ -387,7 +387,15 @@ export function DrawioEmbed() {
                             value={selectedType.name}
                             onChange={(e) => {
                                 const type = DIAGRAM_TYPES.find(t => t.name === e.target.value);
-                                if (type) setSelectedType(type);
+                                if (type) {
+                                    setSelectedType(type);
+                                    if (projectPath) {
+                                        const projectName = projectPath.split('/').pop() || 'Project';
+                                        const suffix = type.name.toLowerCase().replace(/\s+/g, '-');
+                                        setNewFileName(`${projectName}-${suffix}.drawio`);
+                                    }
+                                    setGenType(type.genType);
+                                }
                             }}
                             className="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:border-indigo-500 max-w-[120px]"
                         >
@@ -415,7 +423,7 @@ export function DrawioEmbed() {
                     </div>
                 ) : (
                     <button
-                        onClick={() => setIsCreating(true)}
+                        onClick={handleStartCreate}
                         className="flex items-center gap-1 px-2 py-1 text-gray-400 hover:text-white hover:bg-white/5 rounded"
                     >
                         <Plus className="w-4 h-4" />

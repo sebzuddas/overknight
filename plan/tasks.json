@@ -34,6 +34,16 @@
           "completedAt": "2026-01-30T10:10:56.147Z"
         },
         {
+          "id": "task-1769718283740",
+          "title": "Generate workflows and each task should then follow a given workflow. ",
+          "description": "",
+          "priority": 3,
+          "status": "completed",
+          "branch": null,
+          "createdAt": "2026-01-29T20:24:43.740Z",
+          "completedAt": "2026-01-31T20:02:53.438Z"
+        },
+        {
           "id": "task-1769703830018",
           "title": "Add a gantt chart functionality where each task can be assigned a time to build. ",
           "description": "",
@@ -82,10 +92,10 @@
           "title": "Include a way to run agents on individual tasks. ",
           "description": "",
           "priority": 3,
-          "status": "pending",
+          "status": "completed",
           "branch": null,
           "createdAt": "2026-01-29T19:04:30.469Z",
-          "completedAt": null
+          "completedAt": "2026-01-31T20:03:14.944Z"
         },
         {
           "id": "task-1769718242465",
@@ -105,16 +115,6 @@
           "status": "pending",
           "branch": null,
           "createdAt": "2026-01-29T16:31:48.335Z",
-          "completedAt": null
-        },
-        {
-          "id": "task-1769718283740",
-          "title": "Generate workflows and each task should then follow a given workflow. ",
-          "description": "",
-          "priority": 3,
-          "status": "pending",
-          "branch": null,
-          "createdAt": "2026-01-29T20:24:43.740Z",
           "completedAt": null
         }
       ],

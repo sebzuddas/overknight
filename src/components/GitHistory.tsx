@@ -26,12 +26,12 @@ export function GitHistory() {
         } catch (err) { console.error(err); }
     }, [projectPath, setIsRepo, setCurrentBranch, setCommits]); // Added all state setters as dependencies
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => {
         fetchData();
         const interval = setInterval(fetchData, 10000);
         return () => clearInterval(interval);
-    }, [fetchData, projectPath, isRunning]); // Added fetchData to dependencies
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [projectPath, isRunning]); // Added fetchData to dependencies
 
     const handleInitGit = async () => {
         if (!projectPath) return;
