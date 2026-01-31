@@ -16,7 +16,7 @@ The goal of OverKnight is to maximize AI agent utilization by providing a struct
 - **🪵 Transparent Logs**: View real-time logs and chat with your agents while they work.
 - **📐 Architecture View**: Integrated Draw.io support for visualizing system designs.
 - **📅 Scheduling**: Queue tasks to run at specific times (e.g., 2 AM).
-- **📂 Local-First**: No database required. All data is stored in human-readable JSON files within your project.
+- **📂 Local-First**: No database required. All data is stored in human-readable JSON files within your project. 
 
 ## 🛠️ Technology Stack
 
