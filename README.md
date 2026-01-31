@@ -1,5 +1,9 @@
 # OverKnight
 
+## License
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
+
+
 > **"Agent runs while you sleep"**
 
 OverKnight is a specialized task manager designed for **Agentic Development**. It bridges the gap between high-level project planning and autonomous AI agent execution. Instead of copy-pasting prompts manually, you define **Epics** and **Tasks**, assign them to a workflow, and let OverKnight orchestrate the agents to do the work—even overnight.

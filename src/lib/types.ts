@@ -25,6 +25,7 @@ export interface Task {
   workflowId?: string; // ID of the workflow to use for this task
   workflowMandatory?: boolean;
   agent?: string;
+  epicId?: string; // Optional reference for updates/moves
 }
 
 export interface Epic {
