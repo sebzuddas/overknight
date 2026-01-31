@@ -51,9 +51,9 @@ export class AgentRunner {
 
         await this.gitManager.initIfNeeded();
 
-        // MODIFICATION: Use current branch instead of creating new one
-        // const branch = await this.gitManager.createTaskBranch(task.id);
-        const branch = await this.gitManager.getCurrentBranch();
+        // Create and switch to new task branch
+        const branch = await this.gitManager.createTaskBranch(task.id);
+        // const branch = await this.gitManager.getCurrentBranch();
 
         await this.updateTaskStatus(task.id, 'in-progress', branch);
 
@@ -93,7 +93,7 @@ export class AgentRunner {
             summary: allSuccessful ? `Completed ${stepResults.length} steps` : 'Failed',
             commitHash: commitHash || undefined,
         });
-        
+
         return { success: allSuccessful, branch, commitHash, steps: stepResults };
     }
 

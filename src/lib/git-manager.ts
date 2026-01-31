@@ -108,6 +108,46 @@ export class GitManager {
         const result = await this.git.commit(message);
         return result.commit;
     }
+
+    async merge(branch: string): Promise<{ success: boolean; message: string; conflict?: boolean }> {
+        try {
+            await this.git.merge([branch]);
+            return { success: true, message: 'Merged successfully' };
+        } catch (error) {
+            const status = await this.git.status();
+            if (status.conflicted.length > 0) {
+                return { success: false, message: 'Merge conflicts detected', conflict: true };
+            }
+            return { success: false, message: String(error) };
+        }
+    }
+
+    async getDiff(branch: string, target: string = 'main'): Promise<string> {
+        try {
+            // Get diff between the target branch (e.g., main) and the task branch
+            // We use 'target..branch' to see what 'branch' adds to 'target'
+            return await this.git.diff([`${target}..${branch}`]);
+        } catch (e) {
+            console.error('Failed to get diff', e);
+            return '';
+        }
+    }
+
+    async getMergeStatus(branch: string): Promise<{ canMerge: boolean; behind?: number; ahead?: number }> {
+        try {
+            // Assumes we are on the target branch or can access it
+            // This is a simple check. For a more robust check we might need to fetch origin
+            const revList = await this.git.raw(['rev-list', '--left-right', '--count', `main...${branch}`]);
+            const [behind, ahead] = revList.trim().split('\t').map(Number);
+            return { canMerge: true, behind, ahead };
+        } catch {
+            return { canMerge: false };
+        }
+    }
+
+    async abortMerge(): Promise<void> {
+        await this.git.merge(['--abort']);
+    }
 }
 
 export function createGitManager(projectPath: string): GitManager {

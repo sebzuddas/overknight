@@ -13,7 +13,10 @@ export async function GET(request: NextRequest) {
     switch (action) {
         case 'status': return NextResponse.json({ isRepo: true, ...(await gitManager.getStatus()) });
         case 'branches': return NextResponse.json({ branches: await gitManager.listBranches(), overknightBranches: await gitManager.listOverknightBranches() });
+        case 'hasUncommittedChanges': return NextResponse.json({ hasUncommittedChanges: await gitManager.hasUncommittedChanges() });
         case 'commits': return NextResponse.json({ commits: await gitManager.getCommitLog(parseInt(request.nextUrl.searchParams.get('count') || '20')) });
+        case 'diff': return NextResponse.json({ diff: await gitManager.getDiff(request.nextUrl.searchParams.get('branch')!, request.nextUrl.searchParams.get('target') || 'main') });
+        case 'mergeStatus': return NextResponse.json({ status: await gitManager.getMergeStatus(request.nextUrl.searchParams.get('branch')!) });
         default: return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
 }
@@ -29,6 +32,7 @@ export async function POST(request: NextRequest) {
         case 'checkout': await gitManager.checkout(body.data.branchName); return NextResponse.json({ success: true });
         case 'reset': await gitManager.resetToCommit(body.data.commitHash); return NextResponse.json({ success: true });
         case 'createBranch': return NextResponse.json({ branchName: await gitManager.createTaskBranch(body.data.taskId) });
+        case 'merge': return NextResponse.json(await gitManager.merge(body.data.branch));
         default: return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
 }

@@ -60,12 +60,24 @@
         {
           "id": "task-1769704259191",
           "title": "Functional vs non-functional optional forcing",
-          "description": "",
+          "description": "Users should be able to toggle between being forced to write requirements in a proper way (eg defining functional and non functional) or not. ",
           "priority": 3,
-          "status": "completed",
+          "status": "failed",
           "branch": "main",
           "createdAt": "2026-01-29T16:30:59.191Z",
-          "completedAt": "2026-01-30T17:45:59.748Z"
+          "completedAt": null,
+          "workflowMandatory": false
+        },
+        {
+          "id": "task-1769718242465",
+          "title": "Schedule at button for each task. ",
+          "description": "Each task must be able to be scheduled to run at a certain time. This is defined by the start time, but the website itself needs to track this and run the commands at that time. ",
+          "priority": 3,
+          "status": "in-progress",
+          "branch": "overknight/task-1769718242465-1769884344064",
+          "createdAt": "2026-01-29T20:24:02.466Z",
+          "completedAt": null,
+          "workflowMandatory": false
         },
         {
           "id": "task-1769713077222",
@@ -79,23 +91,16 @@
         },
         {
           "id": "task-1769713470469",
-          "title": "Include a way to run agents on individual tasks. ",
-          "description": "",
+          "title": "Include a way to run specific agents on individual tasks. ",
+          "description": "Individual tasks may want to be handled by different agents. The user should, alongside being able to select the workflow, be able to select which agent they want to run that workflow. Maybe Gemini runs workflow A and claude runs workflow B. This should be editable on the workflow settings, but also in the task itself. ",
           "priority": 3,
           "status": "pending",
           "branch": null,
           "createdAt": "2026-01-29T19:04:30.469Z",
-          "completedAt": null
-        },
-        {
-          "id": "task-1769718242465",
-          "title": "Schedule at button for each task. ",
-          "description": "",
-          "priority": 3,
-          "status": "pending",
-          "branch": null,
-          "createdAt": "2026-01-29T20:24:02.466Z",
-          "completedAt": null
+          "completedAt": null,
+          "startDate": "2026-01-31T18:32:00.000Z",
+          "endDate": "2026-01-31T19:32:00.000Z",
+          "workflowMandatory": false
         },
         {
           "id": "task-1769704308335",

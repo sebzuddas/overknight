@@ -1,14 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, Play, CheckCircle2, Circle, XCircle, Loader2, GripVertical, Square, MessageSquare, ArrowDown, Eye, EyeOff } from 'lucide-react';
+import { Plus, Play, CheckCircle2, Circle, XCircle, Loader2, GripVertical, Square, MessageSquare, ArrowDown, Eye, EyeOff, GitMerge, Calendar } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
 import type { Task, Epic, Workflow } from '@/lib/types';
 
 import { LogViewer } from './LogViewer';
+import { MergeModal } from './MergeModal';
 
 export function Backlog() {
     const { tasksData, createEpic, reorderTasks } = useProject();
@@ -16,6 +17,7 @@ export function Backlog() {
     const [newEpicTitle, setNewEpicTitle] = useState('');
     const [newEpicDescription, setNewEpicDescription] = useState('');
     const [viewingLogsForTask, setViewingLogsForTask] = useState<string | null>(null);
+    const [mergingTask, setMergingTask] = useState<Task | null>(null);
 
     if (!tasksData) return <div>Loading...</div>;
 
@@ -83,7 +85,12 @@ export function Backlog() {
                 <div className="space-y-6 pb-20">
                     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                         {tasksData.epics.map(epic => (
-                            <EpicCard key={epic.id} epic={epic} onViewLogs={setViewingLogsForTask} />
+                            <EpicCard
+                                key={epic.id}
+                                epic={epic}
+                                onViewLogs={setViewingLogsForTask}
+                                onMerge={setMergingTask}
+                            />
                         ))}
                     </DndContext>
                 </div>
@@ -97,11 +104,23 @@ export function Backlog() {
                     />
                 </div>
             )}
+
+            {mergingTask && (
+                <MergeModal
+                    task={mergingTask}
+                    onClose={() => setMergingTask(null)}
+                    onMergeComplete={() => {
+                        setMergingTask(null);
+                        // Refresh tasks is handled inside MergeModal -> useProject -> refreshTasks
+                        // But we might want to trigger a refresh here just in case or show success message
+                    }}
+                />
+            )}
         </div>
     );
 }
 
-function EpicCard({ epic, onViewLogs }: { epic: Epic; onViewLogs: (taskId: string) => void }) {
+function EpicCard({ epic, onViewLogs, onMerge }: { epic: Epic; onViewLogs: (taskId: string) => void; onMerge: (task: Task) => void }) {
     const { createTask, updateEpic, runTasks } = useProject();
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [isEditing, setIsEditing] = useState(false);
@@ -225,6 +244,7 @@ function EpicCard({ epic, onViewLogs }: { epic: Epic; onViewLogs: (taskId: strin
                             key={task.id}
                             task={task}
                             onViewLogs={onViewLogs}
+                            onMerge={onMerge}
                             isSelected={selectedTasks.includes(task.id)}
                             onToggleSelection={() => toggleTaskSelection(task.id)}
                             isLast={index === displayedTasks.length - 1}
@@ -250,12 +270,14 @@ function EpicCard({ epic, onViewLogs }: { epic: Epic; onViewLogs: (taskId: strin
 function TaskItem({
     task,
     onViewLogs,
+    onMerge,
     isSelected,
     onToggleSelection,
     isLast
 }: {
     task: Task;
     onViewLogs: (taskId: string) => void;
+    onMerge: (task: Task) => void;
     isSelected: boolean;
     onToggleSelection: () => void;
     isLast: boolean;
@@ -268,6 +290,7 @@ function TaskItem({
     const [editWorkflowId, setEditWorkflowId] = useState(task.workflowId || '');
     const [editWorkflowMandatory, setEditWorkflowMandatory] = useState(task.workflowMandatory || false);
     const [workflows, setWorkflows] = useState<Workflow[]>([]);
+    const startDateInputRef = useRef<HTMLInputElement>(null);
 
     React.useEffect(() => {
         if (projectPath && isEditing) {
@@ -335,13 +358,19 @@ function TaskItem({
         }
     };
 
-    const startEditing = () => {
+    const startEditing = (focusStartDate: boolean = false) => {
         setIsEditing(true);
         setEditTitle(task.title);
         setEditDescription(task.description || '');
         setEditWorkflowId(task.workflowId || '');
         setEditWorkflowMandatory(task.workflowMandatory || false);
         setEditStartDate(task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '');
+        if (focusStartDate) {
+            // Need a slight delay for the input to be rendered
+            setTimeout(() => {
+                startDateInputRef.current?.focus();
+            }, 0);
+        }
     };
 
     if (isEditing) {
@@ -363,6 +392,7 @@ function TaskItem({
                 <div className="flex gap-2 items-center">
                     <label className="text-gray-400 text-xs w-16 shrink-0">Start Time:</label>
                     <input
+                        ref={startDateInputRef}
                         type="datetime-local"
                         value={editStartDate}
                         onChange={e => setEditStartDate(e.target.value)}
@@ -460,12 +490,29 @@ function TaskItem({
                         {task.status === 'in-progress' ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5" />}
                     </button>
                     <button
+                        onClick={(e) => { e.stopPropagation(); startEditing(true); }}
+                        className="p-1.5 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 rounded transition-colors"
+                        title="Schedule Task"
+                    >
+                        <Calendar className="w-3.5 h-3.5" />
+                    </button>
+                    <button
                         onClick={() => onViewLogs(task.id)}
                         className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300"
                         title="Chat & Logs"
                     >
                         <MessageSquare className="w-3.5 h-3.5" />
                     </button>
+                    {task.status === 'completed' && task.branch && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onMerge(task); }}
+                            className="flex items-center gap-1 px-2 py-1.5 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 rounded text-xs transition-colors border border-indigo-500/30"
+                            title="Merge Branch"
+                        >
+                            <GitMerge className="w-3.5 h-3.5" />
+                            Merge
+                        </button>
+                    )}
                     <span className="text-xs text-gray-600 font-mono ml-2">{task.id}</span>
                 </div>
             </div>
