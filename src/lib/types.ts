@@ -48,6 +48,9 @@ export interface WorkflowStep {
   name: string;
   prompt: string;
   enabled: boolean;
+  agentId?: string;
+  skill?: string;
+  mcpId?: string;
 }
 
 export interface WorkflowPermissions {
@@ -65,6 +68,8 @@ export interface Workflow {
   permissions: WorkflowPermissions;
   isDefault?: boolean;
   agent?: string;
+  agentCommand: string;
+  defaultAgentId?: string;
 }
 
 export interface ScheduledRun {

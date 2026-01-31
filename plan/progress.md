@@ -28,3 +28,7 @@ Completed
 ## 2026-01-30T17:45:59.749Z - task-1769704259191: Functional vs non-functional optional forcing
 Completed 5 steps
 - Committed: b3d53aaf540092f1f0349ae27f55eaf3af74e73e
+
+## 2026-01-31T20:08:45.888Z - task-1769713470469: Include a way to run specific agents on individual tasks. 
+Completed 5 steps
+- Committed: 1a0fb668ec0fd59c69b18ad83f50b172ae54b217

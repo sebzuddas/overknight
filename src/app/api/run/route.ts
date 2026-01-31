@@ -1,19 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createScheduler } from '@/lib/scheduler';
 import { createAgentRunner } from '@/lib/agent-runner';
 import { readTasks, isValidProject } from '@/lib/file-storage';
 import type { Task } from '@/lib/types';
-
-const schedulers = new Map<string, ReturnType<typeof createScheduler>>();
-
-function getOrCreateScheduler(projectPath: string) {
-    if (!schedulers.has(projectPath)) {
-        const scheduler = createScheduler({ projectPath });
-        scheduler.initialize();
-        schedulers.set(projectPath, scheduler);
-    }
-    return schedulers.get(projectPath)!;
-}
+import { DEFAULT_AGENTS } from '@/lib/types';
+import { getOrCreateScheduler } from '@/lib/runtime';
 
 export async function GET(request: NextRequest) {
     const projectPath = request.nextUrl.searchParams.get('projectPath');
@@ -54,7 +44,8 @@ export async function POST(request: NextRequest) {
                 if (targetTask) break;
             }
             if (!targetTask) return NextResponse.json({ error: 'Task not found' }, { status: 404 });
-            createAgentRunner({ projectPath }).runTask(targetTask).catch(console.error);
+            createAgentRunner({ projectPath, availableAgents: DEFAULT_AGENTS }).runTask(targetTask).catch(console.error);
+
             return NextResponse.json({ success: true });
         }
         default: return NextResponse.json({ error: 'Unknown action' }, { status: 400 });

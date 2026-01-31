@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readWorkflow, writeWorkflow, isValidProject } from '@/lib/file-storage';
-import { DEFAULT_WORKFLOW_STEPS } from '@/lib/types';
+import { DEFAULT_WORKFLOW_STEPS, DEFAULT_AGENTS } from '@/lib/types';
 import type { WorkflowStep } from '@/lib/types';
+
 
 export async function GET(request: NextRequest) {
     const projectPath = request.nextUrl.searchParams.get('projectPath');

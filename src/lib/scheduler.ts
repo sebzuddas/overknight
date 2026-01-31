@@ -1,7 +1,8 @@
 import schedule, { Job } from 'node-schedule';
 import { readSchedule, writeSchedule, readTasks, writeTasks } from './file-storage';
 import { createAgentRunner, AgentRunner } from './agent-runner';
-import type { ScheduledRun, Task, DEFAULT_AGENTS } from './types';
+import type { ScheduledRun, Task } from './types';
+import { DEFAULT_AGENTS } from './types';
 import path from 'path'; // Added for path operations
 import * as fs from 'fs'; // Added for fs.watch
 
@@ -26,12 +27,45 @@ export class Scheduler {
 
     async initialize(): Promise<void> {
         const scheduleData = await readSchedule(this.projectPath);
-        if (!scheduleData) return;
-        for (const run of scheduleData.runs) {
-            if (run.status === 'pending') {
-                const scheduledTime = new Date(run.scheduledTime);
-                if (scheduledTime > new Date()) {
-                    this.scheduleRun(run);
+        if (scheduleData) {
+            for (const run of scheduleData.runs) {
+                if (run.status === 'pending') {
+                    const scheduledTime = new Date(run.scheduledTime);
+                    if (scheduledTime > new Date()) {
+                        this.scheduleRun(run);
+                    }
+                }
+            }
+        }
+        await this.syncWithTasks();
+    }
+
+    async syncWithTasks(): Promise<void> {
+        const tasksData = await readTasks(this.projectPath);
+        if (!tasksData) return;
+
+        const now = new Date();
+        for (const epic of tasksData.epics) {
+            for (const task of epic.tasks) {
+                if (task.status === 'pending' && task.startDate) {
+                    const startDate = new Date(task.startDate);
+                    if (startDate > now) {
+                        // Check if already scheduled
+                        const runId = `auto-run-${task.id}`;
+                        if (!this.jobs.has(runId)) {
+                            // Create a transient scheduled run
+                            const run: ScheduledRun = {
+                                id: runId,
+                                taskIds: [task.id],
+                                scheduledTime: task.startDate,
+                                status: 'pending',
+                                createdAt: new Date().toISOString()
+                            };
+
+                            console.log(`[Scheduler] Auto-scheduling task ${task.title} (${task.id}) for ${task.startDate}`);
+                            this.scheduleRun(run);
+                        }
+                    }
                 }
             }
         }
@@ -54,6 +88,7 @@ export class Scheduler {
 
     private scheduleRun(run: ScheduledRun): void {
         const job = schedule.scheduleJob(new Date(run.scheduledTime), async () => {
+            console.log(`[Scheduler] Executing run ${run.id} at ${new Date().toISOString()}`);
             await this.executeRun(run);
             this.jobs.delete(run.id);
         });

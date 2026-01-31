@@ -1,73 +1,80 @@
 [
-    {
-        "id": "default",
-        "title": "Standard Development",
-        "description": "Standard TDD workflow with architecture checks",
-        "isDefault": true,
-        "steps": [
-            {
-                "id": "check-arch",
-                "name": "Check Architectures",
-                "prompt": "Review the architecture diagrams in docs/architectures/ for relevant diagrams.",
-                "enabled": true
-            },
-            {
-                "id": "write-tests",
-                "name": "Write Unit Tests",
-                "prompt": "Write failing unit tests for the feature before implementing.",
-                "enabled": true
-            },
-            {
-                "id": "implement",
-                "name": "Implement Feature",
-                "prompt": "Implement the feature to make the tests pass.",
-                "enabled": true
-            },
-            {
-                "id": "lint",
-                "name": "Run Linters",
-                "prompt": "Run linting, type checking, and fix any issues.",
-                "enabled": true
-            },
-            {
-                "id": "update-docs",
-                "name": "Update Documentation",
-                "prompt": "Update relevant documentation and architecture diagrams based on the changes made.",
-                "enabled": true
-            }
-        ],
-        "agentCommand": "gemini -p \"{{prompt}}\" --yolo",
-        "workingDirectory": "/Users/sebastianozuddas/Programming/overknight/",
-        "permissions": {
-            "allowShell": true,
-            "allowGit": true,
-            "requireApproval": false
-        }
-    },
-    {
-        "id": "architecture-generation",
-        "title": "Architecture Generation",
-        "description": "Workflow for generating SysML and UML diagrams",
-        "steps": [
-            {
-                "id": "analysis",
-                "name": "Analyze & Plan",
-                "prompt": "Analyze the request and the existing codebase. Determine the components, relationships, and structure needed for the diagram. Output a textual plan of the diagram nodes and edges.",
-                "enabled": true
-            },
-            {
-                "id": "generation",
-                "name": "Generate XML",
-                "prompt": "Based on the plan and the task description, generate a valid Draw.io (mxGraphModel) XML file. Ensure it uses standard shapes. Save the content directly to the target .drawio file specified in the task title.",
-                "enabled": true
-            }
-        ],
-        "agentCommand": "gemini -p \"{{prompt}}\" --yolo",
-        "workingDirectory": "/Users/sebastianozuddas/Programming/overknight/",
-        "permissions": {
-            "allowShell": true,
-            "allowGit": true,
-            "requireApproval": false
-        }
+  {
+    "id": "default",
+    "title": "Standard Development",
+    "description": "Standard TDD workflow with architecture checks",
+    "isDefault": true,
+    "steps": [
+      {
+        "id": "c0c82387-8d1f-44bd-a4cc-ae67adf288da",
+        "name": "Understand the task",
+        "prompt": "Gather context about the task itself. Consider the current architecture of the system, the details the user has defined - noting whether they are functional and/or non functional requirements. ",
+        "enabled": true
+      },
+      {
+        "id": "check-arch",
+        "name": "Check Architectures",
+        "prompt": "Review the architecture diagrams in docs/architectures/ for relevant diagrams.",
+        "enabled": true
+      },
+      {
+        "id": "write-tests",
+        "name": "Write Unit Tests",
+        "prompt": "Write failing unit tests for the feature before implementing.",
+        "enabled": true
+      },
+      {
+        "id": "implement",
+        "name": "Implement Feature",
+        "prompt": "Implement the feature to make the tests pass.",
+        "enabled": true
+      },
+      {
+        "id": "lint",
+        "name": "Run Linters",
+        "prompt": "Run linting, type checking, and fix any issues.",
+        "enabled": true
+      },
+      {
+        "id": "update-docs",
+        "name": "Update Documentation",
+        "prompt": "Update relevant documentation and architecture diagrams based on the changes made.",
+        "enabled": true
+      }
+    ],
+    "agentCommand": "gemini -p \"{{prompt}}\" --yolo",
+    "workingDirectory": "/Users/sebastianozuddas/Programming/overknight/",
+    "permissions": {
+      "allowShell": true,
+      "allowGit": true,
+      "requireApproval": false
     }
+  },
+  {
+    "id": "architecture-generation",
+    "title": "Architecture Generation",
+    "description": "Workflow for generating SysML and UML diagrams",
+    "steps": [
+      {
+        "id": "analysis",
+        "name": "Analyze & Plan",
+        "prompt": "Analyze the request and the existing codebase. Determine the components, relationships, and structure needed for the diagram. Output a textual plan of the diagram nodes and edges.",
+        "enabled": true
+      },
+      {
+        "id": "generation",
+        "name": "Generate XML",
+        "prompt": "Based on the plan and the task description, generate a valid Draw.io (mxGraphModel) XML file. Ensure it uses standard shapes. Save the content directly to the target .drawio file specified in the task title.",
+        "enabled": true
+      }
+    ],
+    "agentCommand": "gemini -p \"{{prompt}}\" --yolo",
+    "workingDirectory": "/Users/sebastianozuddas/Programming/overknight/",
+    "permissions": {
+      "allowShell": true,
+      "allowGit": true,
+      "requireApproval": false
+    },
+    "isDefault": false
+  }
 ]

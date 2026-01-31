@@ -65,7 +65,8 @@
           "createdAt": "2026-01-29T16:23:58.518Z",
           "completedAt": null,
           "startDate": "2026-02-01T00:00:00.000Z",
-          "endDate": "2026-02-01T01:00:00.000Z"
+          "endDate": "2026-02-01T01:00:00.000Z",
+          "workflowMandatory": false
         },
         {
           "id": "task-1769704259191",
@@ -93,19 +94,19 @@
           "description": "",
           "priority": 3,
           "status": "completed",
-          "branch": null,
+          "branch": "overknight/task-1769713470469-1769887897667",
           "createdAt": "2026-01-29T19:04:30.469Z",
-          "completedAt": "2026-01-31T20:03:14.944Z"
+          "completedAt": "2026-01-31T20:08:45.887Z"
         },
         {
           "id": "task-1769718242465",
           "title": "Schedule at button for each task. ",
           "description": "",
           "priority": 3,
-          "status": "pending",
+          "status": "completed",
           "branch": null,
           "createdAt": "2026-01-29T20:24:02.466Z",
-          "completedAt": null
+          "completedAt": "2026-01-31T20:27:47.831Z"
         },
         {
           "id": "task-1769704308335",
@@ -116,6 +117,30 @@
           "branch": null,
           "createdAt": "2026-01-29T16:31:48.335Z",
           "completedAt": null
+        },
+        {
+          "id": "task-1769891282589",
+          "title": "Schedule visualisation",
+          "description": "When a subtask is not scheduled, it is dimmed, but when it is, it is bright. You can then scroll along the timeline to see when the different tasks are scheduled. They then are green when completed, they are yellow and show a loading symbol when they are working, and they are blue when they have not yet been scheduled. \nYou should be able to schedule tasks by clicking a cell on the time of a row. For example, for Epic A, task A, I should be able to click on a time on that row, and for that time to correspond to when the task is scheduled for. ",
+          "priority": 3,
+          "status": "pending",
+          "branch": null,
+          "createdAt": "2026-01-31T20:28:02.589Z",
+          "completedAt": null,
+          "workflowMandatory": false,
+          "startDate": "2026-01-31T00:00:00.000Z",
+          "endDate": "2026-01-31T01:00:00.000Z"
+        },
+        {
+          "id": "task-1769891914491",
+          "title": "Workflow enhancement",
+          "description": "The workflow currently supports a linear set of steps. However, it would be great if there was a node based interface option, that the user could prompt and generate structured workflows. I think this also has to be linear, but it could also have some form of conditions. IE: only continue when all previous unit tests have passed, or similar. ",
+          "priority": 3,
+          "status": "pending",
+          "branch": null,
+          "createdAt": "2026-01-31T20:38:34.491Z",
+          "completedAt": null,
+          "workflowMandatory": false
         }
       ],
       "createdAt": "2026-01-29T16:08:42.218Z"
@@ -216,6 +241,38 @@
           "branch": null,
           "createdAt": "2026-01-29T20:46:10.276Z",
           "completedAt": null
+        },
+        {
+          "id": "task-1769890779586",
+          "title": "Find ways of tracking the token usage and API limits of each agent that the user has linked. ",
+          "description": "",
+          "priority": 3,
+          "status": "pending",
+          "branch": null,
+          "createdAt": "2026-01-31T20:19:39.586Z",
+          "completedAt": null
+        },
+        {
+          "id": "task-1769890797531",
+          "title": "Common requirements documentation",
+          "description": "There should be a page dedicated to requirements tracking. Functional and non-functional. Each task in the backlog should be defined as containing functional, non-functional or both. The agent should then infer this upon invokation, and then they should update the requirements document accordingly. For example, if a user defines some functional requirements, the agent should then update the requirements doc with both functional and non-functional requirements. \n\nFurther, the agent should then map these new requirements to the architecture document. The requirements doc and the architecture docs should be the common ground that all agents gather context on in order to develop robust solutions. ",
+          "priority": 3,
+          "status": "pending",
+          "branch": null,
+          "createdAt": "2026-01-31T20:19:57.531Z",
+          "completedAt": null,
+          "workflowMandatory": false
+        },
+        {
+          "id": "task-1769891049657",
+          "title": "Handling blank projects",
+          "description": "When a user starts overknight and it's in a blank project, the software should grant the user a textbox where they define their idea. From this, they define the tasks in the backlog, and some initial architectures and requirements. In the case the project is not empty, the action of getting the tasks in the backlog, generating the requirements doc and generating the architecture should be based on what the project already has. ",
+          "priority": 3,
+          "status": "pending",
+          "branch": null,
+          "createdAt": "2026-01-31T20:24:09.657Z",
+          "completedAt": null,
+          "workflowMandatory": false
         }
       ],
       "createdAt": "2026-01-29T16:30:30.581Z"

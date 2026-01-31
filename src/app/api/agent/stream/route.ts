@@ -2,7 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAgentRunner } from '@/lib/agent-runner';
 import { readTasks, isValidProject } from '@/lib/file-storage';
-import { Task } from '@/lib/types';
+import { Task, DEFAULT_AGENTS } from '@/lib/types';
+
 
 export const runtime = 'nodejs';
 
@@ -53,8 +54,10 @@ function createAgentStream(projectPath: string, taskId: string) {
                         },
                         onStepComplete: (step, result) => {
                             controller.enqueue(encoder.encode(`\n--- Step Completed: ${result.success ? 'Success' : 'Failed'} (${result.duration}ms) ---\n`));
-                        }
+                        },
+                        availableAgents: DEFAULT_AGENTS
                     });
+
 
                     controller.enqueue(encoder.encode(`[System] Starting task: ${targetTask.title} (${targetTask.id})\n`));
 

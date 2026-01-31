@@ -1,7 +1,9 @@
 import { spawn, ChildProcess } from 'child_process';
 import { GitManager, createGitManager } from './git-manager';
 import { readWorkflow, readTasks, writeTasks, appendProgress, appendTaskLog } from './file-storage';
-import type { Task, WorkflowStep, AgentConfig, DEFAULT_AGENTS } from './types';
+import type { Task, WorkflowStep, AgentConfig } from './types';
+import { DEFAULT_AGENTS } from './types';
+
 import treeKill from 'tree-kill';
 
 export interface RunResult {
@@ -103,7 +105,7 @@ export class AgentRunner {
             summary: allSuccessful ? `Completed ${stepResults.length} steps` : 'Failed',
             commitHash: commitHash || undefined,
         });
-        
+
         return { success: allSuccessful, branch, commitHash, steps: stepResults };
     }
 

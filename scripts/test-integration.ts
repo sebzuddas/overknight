@@ -1,7 +1,7 @@
 import { createGitManager } from '../src/lib/git-manager';
 import { createAgentRunner } from '../src/lib/agent-runner';
 import { initializeProject } from '../src/lib/file-storage';
-import { DEFAULT_WORKFLOW_STEPS } from '../src/lib/types';
+import { DEFAULT_WORKFLOW_STEPS, DEFAULT_AGENTS } from '../src/lib/types';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -40,7 +40,8 @@ async function runIntegrationTest() {
         onStepComplete: (step, result) => {
             console.log(`   Step '${step.name}' completed: ${result.success ? 'SUCCESS' : 'FAILED'}`);
             console.log(`   Output: ${result.output.trim()}`);
-        }
+        },
+        availableAgents: DEFAULT_AGENTS
     });
 
     const result = await runner.runTask({

@@ -6,7 +6,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS } from '@dnd-kit/utilities';
 import { Plus, Play, CheckCircle2, Circle, XCircle, Loader2, GripVertical, Square, MessageSquare, ArrowDown, Eye, EyeOff } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
-import type { Task, Epic, Workflow, DEFAULT_AGENTS } from '@/lib/types';
+import { type Task, type Epic, type Workflow, DEFAULT_AGENTS, type AgentConfig } from '@/lib/types';
 
 import { LogViewer } from './LogViewer';
 
@@ -264,7 +264,7 @@ function TaskItem({
     const [isEditing, setIsEditing] = useState(false);
     const [editTitle, setEditTitle] = useState(task.title);
     const [editDescription, setEditDescription] = useState(task.description || '');
-    const [editStartDate, setEditStartDate] = useState(task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '');
+    const [editStartDate, setEditStartDate] = useState(task.startDate ? new Date(task.startDate).toISOString().slice(0, 16) : '');
     const [editWorkflowId, setEditWorkflowId] = useState(task.workflowId || '');
     const [editWorkflowMandatory, setEditWorkflowMandatory] = useState(task.workflowMandatory || false);
     const [editAgent, setEditAgent] = useState(task.agent || '');
@@ -343,7 +343,7 @@ function TaskItem({
         setEditDescription(task.description || '');
         setEditWorkflowId(task.workflowId || '');
         setEditWorkflowMandatory(task.workflowMandatory || false);
-        setEditStartDate(task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '');
+        setEditStartDate(task.startDate ? new Date(task.startDate).toISOString().slice(0, 16) : '');
         setEditAgent(task.agent || '');
     };
 

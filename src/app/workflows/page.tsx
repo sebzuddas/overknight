@@ -1,9 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useProject } from '@/context/ProjectContext';
-import { Workflow, WorkflowStep } from '@/lib/types';
-import { Plus, Trash2, Save, Edit } from 'lucide-react';
+import { Workflow, WorkflowStep, DEFAULT_AGENTS } from '@/lib/types';
+import { Plus, Trash2, Save, Edit, GripVertical } from 'lucide-react';
 
 const DEFAULT_STEPS: WorkflowStep[] = [
     { id: 'step-1', name: 'New Step', prompt: '', enabled: true }
@@ -123,6 +126,19 @@ export default function WorkflowsPage() {
         setSelectedWorkflow({ ...selectedWorkflow, steps: newSteps });
     };
 
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!selectedWorkflow || !over || active.id === over.id) return;
+
+        const oldIndex = selectedWorkflow.steps.findIndex(s => s.id === active.id);
+        const newIndex = selectedWorkflow.steps.findIndex(s => s.id === over.id);
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+            const newSteps = arrayMove(selectedWorkflow.steps, oldIndex, newIndex);
+            setSelectedWorkflow({ ...selectedWorkflow, steps: newSteps });
+        }
+    };
+
     if (!projectPath) return <div className="p-8 text-center text-gray-500">Please select a project</div>;
 
     return (
@@ -207,38 +223,19 @@ export default function WorkflowsPage() {
                             <div className="max-w-4xl mx-auto space-y-6">
                                 <div className="space-y-4">
                                     <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">Workflow Steps</h3>
-                                    {selectedWorkflow.steps.map((step, index) => (
-                                        <div key={step.id} className="bg-gray-900 border border-gray-800 rounded-lg p-4 relative group">
-                                            <div className="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => removeStep(index)} className="text-gray-500 hover:text-red-400">
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-
-                                            <div className="grid gap-4">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-sm font-medium text-gray-400">
-                                                        {index + 1}
-                                                    </div>
-                                                    <input
-                                                        value={step.name}
-                                                        onChange={(e) => updateStep(index, 'name', e.target.value)}
-                                                        className="flex-1 bg-transparent border-b border-transparent focus:border-indigo-500 focus:outline-none py-1 font-medium text-gray-200"
-                                                        placeholder="Step Name"
-                                                    />
-                                                </div>
-
-                                                <div className="pl-12">
-                                                    <textarea
-                                                        value={step.prompt}
-                                                        onChange={(e) => updateStep(index, 'prompt', e.target.value)}
-                                                        className="w-full h-24 bg-black border border-gray-800 rounded p-3 text-sm text-gray-300 focus:border-indigo-500 focus:outline-none font-mono"
-                                                        placeholder="Enter prompt for this step..."
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
+                                    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                        <SortableContext items={selectedWorkflow.steps.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                                            {selectedWorkflow.steps.map((step, index) => (
+                                                <SortableStepItem
+                                                    key={step.id}
+                                                    step={step}
+                                                    index={index}
+                                                    updateStep={updateStep}
+                                                    removeStep={removeStep}
+                                                />
+                                            ))}
+                                        </SortableContext>
+                                    </DndContext>
 
                                     <button
                                         onClick={addStep}
@@ -281,6 +278,105 @@ export default function WorkflowsPage() {
                         <p>Select a workflow to edit or create a new one</p>
                     </div>
                 )}
+            </div>
+        </div>
+    );
+}
+
+function SortableStepItem({
+    step,
+    index,
+    updateStep,
+    removeStep
+}: {
+    step: WorkflowStep;
+    index: number;
+    updateStep: (index: number, field: keyof WorkflowStep, value: WorkflowStep[keyof WorkflowStep]) => void;
+    removeStep: (index: number) => void;
+}) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id: step.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 1000 : 1,
+        position: 'relative' as const,
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} className="bg-gray-900 border border-gray-800 rounded-lg p-4 relative group">
+            <div className="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                <button onClick={() => removeStep(index)} className="text-gray-500 hover:text-red-400">
+                    <Trash2 className="w-4 h-4" />
+                </button>
+            </div>
+
+            <div className="grid gap-4">
+                <div className="flex items-center gap-4">
+                    <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-400">
+                        <GripVertical className="w-5 h-5" />
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-sm font-medium text-gray-400">
+                        {index + 1}
+                    </div>
+                    <input
+                        value={step.name}
+                        onChange={(e) => updateStep(index, 'name', e.target.value)}
+                        className="flex-1 bg-transparent border-b border-transparent focus:border-indigo-500 focus:outline-none py-1 font-medium text-gray-200"
+                        placeholder="Step Name"
+                    />
+                </div>
+
+                <div className="pl-16">
+                    <textarea
+                        value={step.prompt}
+                        onChange={(e) => updateStep(index, 'prompt', e.target.value)}
+                        className="w-full h-24 bg-black border border-gray-800 rounded p-3 text-sm text-gray-300 focus:border-indigo-500 focus:outline-none font-mono"
+                        placeholder="Enter prompt for this step..."
+                    />
+                </div>
+
+                <div className="pl-16 grid grid-cols-3 gap-4">
+                    <div>
+                        <label className="block text-xs text-gray-500 mb-1">Step Agent</label>
+                        <select
+                            value={step.agentId || ''}
+                            onChange={(e) => updateStep(index, 'agentId', e.target.value || undefined)}
+                            className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-300 focus:border-indigo-500 focus:outline-none"
+                        >
+                            <option value="">Default (Workflow/System)</option>
+                            {DEFAULT_AGENTS.map(agent => (
+                                <option key={agent.name} value={agent.name}>{agent.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs text-gray-500 mb-1">Required Skill</label>
+                        <input
+                            value={step.skill || ''}
+                            onChange={(e) => updateStep(index, 'skill', e.target.value || undefined)}
+                            className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-300 focus:border-indigo-500 focus:outline-none"
+                            placeholder="e.g. typescript, python..."
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs text-gray-500 mb-1">MCP ID</label>
+                        <input
+                            value={step.mcpId || ''}
+                            onChange={(e) => updateStep(index, 'mcpId', e.target.value || undefined)}
+                            className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-300 focus:border-indigo-500 focus:outline-none"
+                            placeholder="Optional MCP ID"
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     );

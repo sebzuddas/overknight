@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, GripVertical, Plus, Trash2, ToggleLeft, ToggleRight, Terminal, Shield } from 'lucide-react';
 import { useProject } from '@/context/ProjectContext';
-import type { WorkflowStep, DEFAULT_AGENTS } from '@/lib/types';
+import type { WorkflowStep } from '@/lib/types';
+import { DEFAULT_AGENTS } from '@/lib/types';
+
 
 export function WorkflowEditor() {
     const { projectPath, workflow, refreshWorkflow } = useProject();

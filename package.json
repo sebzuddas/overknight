@@ -16,6 +16,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@svar-ui/react-gantt": "^2.5.2",
     "ai": "^6.0.62",
+    "date-fns": "^4.1.0",
     "eslint-plugin-react-hooks": "^7.0.1",
     "lucide-react": "^0.563.0",
     "next": "16.1.6",

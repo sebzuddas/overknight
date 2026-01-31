@@ -9,16 +9,16 @@ import { GitHistory } from '@/components/GitHistory';
 import { DrawioEmbed } from '@/components/DrawioEmbed';
 
 import WorkflowsPage from '@/app/workflows/page';
-import { GanttChart } from '@/components/GanttChart';
+import { Timeline } from '@/components/Timeline';
 import { useProject } from '@/context/ProjectContext';
 
-type Tab = 'tasks' | 'architectures' | 'workflow' | 'gantt';
+type Tab = 'tasks' | 'architectures' | 'workflow' | 'timeline';
 
 export default function Home() {
   const { tasksData, isRunning, projectPath } = useProject();
   const [activeTab, setActiveTab] = useState<Tab>('tasks');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const tabs: { id: Tab; label: string }[] = [{ id: 'tasks', label: 'Backlog' }, { id: 'architectures', label: 'Architectures' }, { id: 'workflow', label: 'Workflow' }, { id: 'gantt', label: 'Gantt Chart' }];
+  const tabs: { id: Tab; label: string }[] = [{ id: 'tasks', label: 'Backlog' }, { id: 'architectures', label: 'Architectures' }, { id: 'workflow', label: 'Workflow' }, { id: 'timeline', label: 'Timeline' }];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
@@ -55,7 +55,7 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <>{activeTab === 'tasks' && <Backlog />}{activeTab === 'architectures' && <DrawioEmbed />}{activeTab === 'workflow' && <WorkflowsPage />}{activeTab === 'gantt' && <GanttChart />}</>
+            <>{activeTab === 'tasks' && <Backlog />}{activeTab === 'architectures' && <DrawioEmbed />}{activeTab === 'workflow' && <WorkflowsPage />}{activeTab === 'timeline' && <Timeline />}</>
           )}
         </main>
       </div>
