@@ -18,6 +18,8 @@ export class Scheduler {
     private jobs: Map<string, Job> = new Map();
     private currentRunner: AgentRunner | null = null;
     private isRunning: boolean = false;
+    private tasksWatcher: fs.FSWatcher | null = null;
+    private currentRunId: string | null = null; // Add this line // Add this line
 
     constructor(options: SchedulerOptions) {
         this.projectPath = options.projectPath;
@@ -25,16 +27,22 @@ export class Scheduler {
     }
 
     async initialize(): Promise<void> {
-        const scheduleData = await readSchedule(this.projectPath);
-        if (!scheduleData) return;
-        for (const run of scheduleData.runs) {
-            if (run.status === 'pending') {
-                const scheduledTime = new Date(run.scheduledTime);
-                if (scheduledTime > new Date()) {
-                    this.scheduleRun(run);
-                }
-            }
+        // ... existing initialize logic ...
+
+        // Close existing watcher if any
+        if (this.tasksWatcher) {
+            this.tasksWatcher.close();
+            this.tasksWatcher = null;
         }
+
+        // Setup watcher for tasks.json
+        const tasksJsonPath = path.join(this.projectPath, 'plan/tasks.json');
+        this.tasksWatcher = fs.watch(tasksJsonPath, async (eventType: string) => {
+            if (eventType === 'change') {
+                console.log(`[Scheduler] tasks.json changed, re-initializing scheduler for project ${this.projectPath}`);
+                await this.initialize(); // Re-initialize scheduler on changes
+            }
+        });
     }
 
     async scheduleNewRun(taskIds: string[], scheduledTime: Date): Promise<ScheduledRun> {
@@ -63,6 +71,7 @@ export class Scheduler {
     async executeRun(run: ScheduledRun): Promise<void> {
         if (this.isRunning) throw new Error('Another run is already in progress');
         this.isRunning = true;
+        this.currentRunId = run.id; // Set current run ID
         this.options.onRunStart?.(run);
         await this.updateRunStatus(run.id, 'running');
 
@@ -70,6 +79,7 @@ export class Scheduler {
         if (!tasksData) {
             await this.updateRunStatus(run.id, 'cancelled');
             this.isRunning = false;
+            this.currentRunId = null; // Clear current run ID
             return;
         }
 
@@ -119,6 +129,7 @@ export class Scheduler {
 
         this.currentRunner = null;
         this.isRunning = false;
+        this.currentRunId = null; // Clear current run ID
         await this.updateRunStatus(run.id, 'completed');
         this.options.onRunComplete?.(run, allSuccessful);
     }
@@ -139,6 +150,12 @@ export class Scheduler {
         if (this.currentRunner) {
             this.currentRunner.cancel();
             this.currentRunner = null;
+        }
+
+        // If there was a current run, mark it as cancelled
+        if (this.currentRunId) {
+            await this.updateRunStatus(this.currentRunId, 'cancelled');
+            this.currentRunId = null;
         }
 
         // Force update any in-progress tasks to cancelled
@@ -168,6 +185,35 @@ export class Scheduler {
         const run = scheduleData.runs.find(r => r.id === runId);
         if (run) {
             run.status = status;
+
+            // If it's a task-based schedule, update the corresponding task
+            if (run.id.startsWith('task-schedule-') && run.taskIds.length === 1) {
+                const taskId = run.taskIds[0];
+                let tasksData = await readTasks(this.projectPath);
+                if (tasksData) {
+                    let taskUpdated = false;
+                    for (const epic of tasksData.epics) {
+                        const task = epic.tasks.find(t => t.id === taskId);
+                        if (task) {
+                            if (status === 'completed') {
+                                task.status = 'completed';
+                                task.completedAt = new Date().toISOString();
+                            } else if (status === 'cancelled') {
+                                // If cancelled, revert to pending if it was running, otherwise just pending
+                                task.status = task.status === 'in-progress' ? 'failed' : 'pending';
+                                task.completedAt = null;
+                            } else if (status === 'running') {
+                                task.status = 'in-progress';
+                            }
+                            taskUpdated = true;
+                            break;
+                        }
+                    }
+                    if (taskUpdated) {
+                        await writeTasks(this.projectPath, tasksData);
+                    }
+                }
+            }
             await writeSchedule(this.projectPath, scheduleData);
         }
     }
@@ -188,6 +234,7 @@ export class Scheduler {
         for (const job of this.jobs.values()) job.cancel();
         this.jobs.clear();
         this.cancelCurrent();
+        this.tasksWatcher?.close(); // Close the tasks.json watcher
     }
 }
 

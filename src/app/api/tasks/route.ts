@@ -64,13 +64,30 @@ export async function POST(request: NextRequest) {
         }
         case 'updateTask': {
             let task: Task | undefined;
+            let epicId: string | undefined;
             for (const epic of tasksData.epics) {
                 task = epic.tasks.find(t => t.id === data.taskId);
-                if (task) break;
+                if (task) {
+                    epicId = epic.id;
+                    break;
+                }
             }
             if (!task) return NextResponse.json({ error: 'Task not found' }, { status: 404 });
+
+            const oldStartDate = task.startDate;
             Object.assign(task, data.updates);
             await writeTasks(projectPath, tasksData);
+
+            // If startDate was changed, reinitialize the scheduler
+            if (oldStartDate !== task.startDate) {
+                // Do not block the response for reinitialization
+                fetch(`${request.nextUrl.origin}/api/run?projectPath=${encodeURIComponent(projectPath)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'reinitialize' })
+                }).catch(console.error);
+            }
+
             return NextResponse.json(task);
         }
         case 'deleteEpic': {
