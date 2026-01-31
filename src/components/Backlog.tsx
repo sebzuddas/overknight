@@ -286,7 +286,7 @@ function TaskItem({
     const [isEditing, setIsEditing] = useState(false);
     const [editTitle, setEditTitle] = useState(task.title);
     const [editDescription, setEditDescription] = useState(task.description || '');
-    const [editStartDate, setEditStartDate] = useState(task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '');
+    const [editStartDate, setEditStartDate] = useState(task.startDate ? task.startDate.slice(0, 16) : '');
     const [editWorkflowId, setEditWorkflowId] = useState(task.workflowId || '');
     const [editWorkflowMandatory, setEditWorkflowMandatory] = useState(task.workflowMandatory || false);
     const [workflows, setWorkflows] = useState<Workflow[]>([]);
@@ -364,7 +364,7 @@ function TaskItem({
         setEditDescription(task.description || '');
         setEditWorkflowId(task.workflowId || '');
         setEditWorkflowMandatory(task.workflowMandatory || false);
-        setEditStartDate(task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '');
+        setEditStartDate(task.startDate ? task.startDate.slice(0, 16) : '');
         if (focusStartDate) {
             // Need a slight delay for the input to be rendered
             setTimeout(() => {
@@ -390,8 +390,9 @@ function TaskItem({
                     placeholder="Task Description"
                 />
                 <div className="flex gap-2 items-center">
-                    <label className="text-gray-400 text-xs w-16 shrink-0">Start Time:</label>
+                    <label htmlFor={`startDate-${task.id}`} className="text-gray-400 text-xs w-16 shrink-0">Start Time:</label>
                     <input
+                        id={`startDate-${task.id}`}
                         ref={startDateInputRef}
                         type="datetime-local"
                         value={editStartDate}
