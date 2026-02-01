@@ -31,7 +31,7 @@ export function DynamicForm({ schema, values, onChange }: DynamicFormProps) {
                 while (curr instanceof z.ZodOptional || curr instanceof z.ZodNullable || curr instanceof z.ZodDefault) {
                     if (curr instanceof z.ZodOptional) isOptional = true;
                     if (curr instanceof z.ZodDefault) {
-                        defaultValue = curr._def.defaultValue();
+                        defaultValue = (curr._def as { defaultValue: () => unknown }).defaultValue();
                     }
                     curr = curr._def.innerType;
                 }

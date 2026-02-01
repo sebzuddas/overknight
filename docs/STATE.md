@@ -1,8 +1,8 @@
 # Project State
 
-- Task: Include a way to run specific agents on individual tasks
-- Status: Completed
-- Last Updated: Saturday, 31 January 2026
+- Task: Task Scheduling Capability
+- Status: Researching
+- Last Updated: Saturday, 1 February 2026
 
 ## Strategy for Handling Optional Functional and Non-Functional Requirements
 

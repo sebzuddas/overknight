@@ -144,7 +144,7 @@ export const DEFAULT_AGENTS: AgentConfig[] = [
   },
   {
     name: 'Gemini CLI',
-    command: 'gemini -p "{{prompt}}"',
+    command: 'gemini --approval-mode auto_edit -p "{{prompt}}"',
     description: 'Google Gemini CLI',
   },
   {

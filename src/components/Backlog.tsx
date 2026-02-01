@@ -8,14 +8,13 @@ import { Plus, Play, CheckCircle2, Circle, XCircle, Loader2, GripVertical, Squar
 import { useProject } from '@/context/ProjectContext';
 import { type Task, type Epic, type Workflow, DEFAULT_AGENTS, type AgentConfig } from '@/lib/types';
 
-import { LogViewer } from './LogViewer';
+
 
 export function Backlog() {
     const { tasksData, createEpic, reorderTasks } = useProject();
     const [newConfirmEpic, setNewConfirmEpic] = useState(false);
     const [newEpicTitle, setNewEpicTitle] = useState('');
     const [newEpicDescription, setNewEpicDescription] = useState('');
-    const [viewingLogsForTask, setViewingLogsForTask] = useState<string | null>(null);
 
     if (!tasksData) return <div>Loading...</div>;
 
@@ -83,25 +82,16 @@ export function Backlog() {
                 <div className="space-y-6 pb-20">
                     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                         {tasksData.epics.map(epic => (
-                            <EpicCard key={epic.id} epic={epic} onViewLogs={setViewingLogsForTask} />
+                            <EpicCard key={epic.id} epic={epic} />
                         ))}
                     </DndContext>
                 </div>
             </div>
-
-            {viewingLogsForTask && (
-                <div className="w-[450px] shrink-0 border-l border-gray-800 pl-6">
-                    <LogViewer
-                        taskId={viewingLogsForTask}
-                        onClose={() => setViewingLogsForTask(null)}
-                    />
-                </div>
-            )}
         </div>
     );
 }
 
-function EpicCard({ epic, onViewLogs }: { epic: Epic; onViewLogs: (taskId: string) => void }) {
+function EpicCard({ epic }: { epic: Epic }) {
     const { createTask, updateEpic, runTasks } = useProject();
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [isEditing, setIsEditing] = useState(false);
@@ -224,7 +214,6 @@ function EpicCard({ epic, onViewLogs }: { epic: Epic; onViewLogs: (taskId: strin
                         <TaskItem
                             key={task.id}
                             task={task}
-                            onViewLogs={onViewLogs}
                             isSelected={selectedTasks.includes(task.id)}
                             onToggleSelection={() => toggleTaskSelection(task.id)}
                             isLast={index === displayedTasks.length - 1}
@@ -249,18 +238,16 @@ function EpicCard({ epic, onViewLogs }: { epic: Epic; onViewLogs: (taskId: strin
 
 function TaskItem({
     task,
-    onViewLogs,
     isSelected,
     onToggleSelection,
     isLast
 }: {
     task: Task;
-    onViewLogs: (taskId: string) => void;
     isSelected: boolean;
     onToggleSelection: () => void;
     isLast: boolean;
 }) {
-    const { runTasks, cancelCurrentRun, updateTask, projectPath } = useProject();
+    const { runTasks, cancelCurrentRun, updateTask, projectPath, setViewingLogsTaskId } = useProject();
     const [isEditing, setIsEditing] = useState(false);
     const [editTitle, setEditTitle] = useState(task.title);
     const [editDescription, setEditDescription] = useState(task.description || '');
@@ -478,7 +465,7 @@ function TaskItem({
                         {task.status === 'in-progress' ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5" />}
                     </button>
                     <button
-                        onClick={() => onViewLogs(task.id)}
+                        onClick={() => setViewingLogsTaskId(task.id)}
                         className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded text-gray-300"
                         title="Chat & Logs"
                     >

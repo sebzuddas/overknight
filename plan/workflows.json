@@ -42,7 +42,7 @@
         "enabled": true
       }
     ],
-    "agentCommand": "gemini -p \"{{prompt}}\" --yolo",
+    "agentCommand": "gemini --approval-mode auto_edit -p \"{{prompt}}\"",
     "workingDirectory": "/Users/sebastianozuddas/Programming/overknight/",
     "permissions": {
       "allowShell": true,
@@ -68,7 +68,7 @@
         "enabled": true
       }
     ],
-    "agentCommand": "gemini -p \"{{prompt}}\" --yolo",
+    "agentCommand": "gemini --approval-mode auto_edit -p \"{{prompt}}\"",
     "workingDirectory": "/Users/sebastianozuddas/Programming/overknight/",
     "permissions": {
       "allowShell": true,

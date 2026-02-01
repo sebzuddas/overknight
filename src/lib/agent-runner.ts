@@ -1,6 +1,6 @@
 import { spawn, ChildProcess } from 'child_process';
 import { GitManager, createGitManager } from './git-manager';
-import { readWorkflow, readTasks, writeTasks, appendProgress, appendTaskLog } from './file-storage';
+import { readWorkflows, readTasks, writeTasks, appendProgress, appendTaskLog } from './file-storage';
 import type { Task, WorkflowStep, AgentConfig } from './types';
 import { DEFAULT_AGENTS } from './types';
 
@@ -49,7 +49,15 @@ export class AgentRunner {
 
     async runTask(task: Task): Promise<RunResult> {
         this.currentTaskId = task.id;
-        const workflow = await readWorkflow(this.projectPath);
+        // Resolve Workflow
+        const workflows = await readWorkflows(this.projectPath);
+        let workflow = task.workflowId
+            ? workflows.find(w => w.id === task.workflowId)
+            : workflows.find(w => w.isDefault);
+
+        // Fallback to first if no default
+        if (!workflow && workflows.length > 0) workflow = workflows[0];
+
         if (!workflow) {
             return { success: false, branch: '', commitHash: null, steps: [], error: 'No workflow found' };
         }
@@ -82,6 +90,10 @@ export class AgentRunner {
             const startTime = Date.now();
             try {
                 const prompt = this.buildPrompt(step, task);
+
+                // Log the User Prompt to the log file so it appears in the UI
+                await appendTaskLog(this.projectPath, task.id, `\n[User] ${step.name}: ${step.prompt}\n${task.description ? `(Context: ${task.description})\n` : ''}\n`);
+
                 const output = await this.invokeAgent(agentConfig, prompt);
                 const result = { stepId: step.id, stepName: step.name, success: true, output, duration: Date.now() - startTime };
                 stepResults.push(result);
@@ -90,6 +102,10 @@ export class AgentRunner {
                 const result = { stepId: step.id, stepName: step.name, success: false, output: String(error), duration: Date.now() - startTime };
                 stepResults.push(result);
                 allSuccessful = false;
+
+                // Ensure error is logged to file for visibility
+                await appendTaskLog(this.projectPath, task.id, `\n[Error] Step failed: ${error instanceof Error ? error.message : String(error)}\n`);
+
                 this.options.onStepComplete?.(step, result);
                 this.options.onError?.(error instanceof Error ? error : new Error(String(error)));
                 break;

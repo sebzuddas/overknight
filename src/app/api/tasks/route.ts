@@ -40,18 +40,20 @@ export async function POST(request: NextRequest) {
                         branch: null,
                         createdAt: now,
                         completedAt: null,
-                        agent: data.agentConfig?.name
+                        agent: data.agentConfig?.name,
+                        workflowId: 'onboarding'
                     },
                     {
                         id: `task-roadmap-${Date.now()}`,
                         title: 'Draft Initial Roadmap',
-                        description: 'Analyze the codebase and create a list of epics for future development in plan/roadmap.md.',
+                        description: 'Analyze the codebase and directly EDIT `plan/tasks.json` to add 3-5 proposed Epics for future development. Use `sed` or `node` to safely append to the JSON file.',
                         priority: 1,
                         status: 'pending',
                         branch: null,
                         createdAt: now,
                         completedAt: null,
-                        agent: data.agentConfig?.name
+                        agent: data.agentConfig?.name,
+                        workflowId: 'onboarding'
                     }
                 ];
 

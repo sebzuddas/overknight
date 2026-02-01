@@ -9,6 +9,9 @@ interface ProjectContextType {
     tasksData: TasksData | null;
     workflow: Workflow | null;
     scheduledRuns: ScheduledRun[];
+    activeRun: ScheduledRun | null;
+    viewingLogsTaskId: string | null;
+    setViewingLogsTaskId: (taskId: string | null) => void;
     isLoading: boolean;
     isRunning: boolean;
     error: string | null;
@@ -42,6 +45,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     const [tasksData, setTasksData] = useState<TasksData | null>(null);
     const [workflow, setWorkflow] = useState<Workflow | null>(null);
     const [scheduledRuns, setScheduledRuns] = useState<ScheduledRun[]>([]);
+    const [activeRun, setActiveRun] = useState<ScheduledRun | null>(null);
+    const [viewingLogsTaskId, setViewingLogsTaskId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isRunning, setIsRunning] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -88,6 +93,11 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         try {
             const data = await fetchData('/api/run'); // Defaults to list
             setScheduledRuns(data.runs || []);
+
+            // Determine active run
+            const running = (data.runs || []).find((r: ScheduledRun) => r.status === 'running');
+            setActiveRun(running || null);
+
             const statusRes = await fetch(`/api/run?projectPath=${encodeURIComponent(projectPath)}&action=status`);
             setIsRunning((await statusRes.json()).isRunning);
         } catch (err) { console.error(err); }
@@ -127,7 +137,20 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) => { await post('/api/tasks', 'updateTask', { taskId, updates }); await refreshTasks(); }, [post, refreshTasks]);
     const deleteEpic = useCallback(async (epicId: string) => { await post('/api/tasks', 'deleteEpic', { epicId }); await refreshTasks(); }, [post, refreshTasks]);
     const deleteTask = useCallback(async (taskId: string) => { await post('/api/tasks', 'deleteTask', { taskId }); await refreshTasks(); }, [post, refreshTasks]);
-    const runTasks = useCallback(async (taskIds: string[]) => { await post('/api/run', 'runNow', { taskIds }); setIsRunning(true); await refreshRuns(); }, [post, refreshRuns]);
+    const runTasks = useCallback(async (taskIds: string[]) => {
+        try {
+            await post('/api/run', 'runNow', { taskIds });
+            setIsRunning(true);
+            await refreshRuns();
+        } catch (err) {
+            if (err instanceof Error && err.message === 'Already running') {
+                console.log('Run already in progress, syncing status...');
+                await refreshRuns();
+                return;
+            }
+            throw err;
+        }
+    }, [post, refreshRuns]);
     const scheduleRun = useCallback(async (taskIds: string[], scheduledTime: Date) => { await post('/api/run', 'schedule', { taskIds, scheduledTime: scheduledTime.toISOString() }); await refreshRuns(); }, [post, refreshRuns]);
     const getTaskLogs = useCallback(async (taskId: string) => {
         if (!projectPath) return '';
@@ -149,7 +172,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }, [post, refreshTasks]);
 
     return (
-        <ProjectContext.Provider value={{ projectPath, setProjectPath, tasksData, workflow, scheduledRuns, isLoading, isRunning, error, refreshTasks, refreshWorkflow, refreshRuns, initializeProject, createEpic, createTask, updateEpic, updateTask, deleteEpic, deleteTask, runTasks, scheduleRun, getTaskLogs, cancelCurrentRun, reorderTasks }}>
+        <ProjectContext.Provider value={{ projectPath, setProjectPath, tasksData, workflow, scheduledRuns, activeRun, viewingLogsTaskId, setViewingLogsTaskId, isLoading, isRunning, error, refreshTasks, refreshWorkflow, refreshRuns, initializeProject, createEpic, createTask, updateEpic, updateTask, deleteEpic, deleteTask, runTasks, scheduleRun, getTaskLogs, cancelCurrentRun, reorderTasks }}>
             {children}
         </ProjectContext.Provider>
     );

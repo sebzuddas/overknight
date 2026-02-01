@@ -167,17 +167,46 @@ export async function initializeProject(projectPath: string, projectName: string
     const config = agentConfig as any;
 
     await writeTasks(projectPath, { project: { name: projectName, path: projectPath, createdAt: now, lastModified: now }, epics: [] });
-    await writeWorkflow(projectPath, {
+    // Default Feature Workflow
+    const defaultWorkflow: Workflow = {
         id: 'default',
-        title: 'Default Workflow',
-        description: 'Standard workflow',
+        title: 'Feature Implementation',
+        description: 'Standard TDD workflow: Tests -> Implement -> Lint',
         isDefault: true,
         steps: defaultSteps,
         agentCommand: config?.command || 'claude -p "{{prompt}}"',
         agent: config?.name || 'Claude Code',
         workingDirectory: projectPath,
         permissions: { allowShell: true, allowGit: true, requireApproval: false }
-    });
+    };
+
+    // Onboarding Workflow
+    const onboardingWorkflow: Workflow = {
+        id: 'onboarding',
+        title: 'Project Scanning',
+        description: 'Workflow for analyzing and understanding the codebase',
+        isDefault: false,
+        steps: [
+            {
+                id: 'scan',
+                name: 'Scan Project Structure',
+                prompt: 'List all files using `find . -maxdepth 2 -not -path \'*/.*\'`. Read `package.json` to understand dependencies. Read `README.md` if it exists.',
+                enabled: true
+            },
+            {
+                id: 'execute',
+                name: 'Execute Analysis',
+                prompt: '{{task.description}}',
+                enabled: true
+            }
+        ],
+        agentCommand: config?.command || 'claude -p "{{prompt}}"',
+        agent: config?.name || 'Claude Code',
+        workingDirectory: projectPath,
+        permissions: { allowShell: true, allowGit: false, requireApproval: false }
+    };
+
+    await writeWorkflows(projectPath, [defaultWorkflow, onboardingWorkflow]);
     await writeSchedule(projectPath, { runs: [] });
     await fs.writeFile(path.join(projectPath, PROJECT_FILES.progress), `# Progress Log\n\nFor ${projectName}\n`, 'utf-8');
 }

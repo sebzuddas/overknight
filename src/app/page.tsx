@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sword, Menu, X } from 'lucide-react';
+import { Sword, Menu, X, Settings } from 'lucide-react';
 import { ProjectSelector } from '@/components/ProjectSelector';
 import { Backlog } from '@/components/Backlog';
 import { SchedulePanel } from '@/components/SchedulePanel';
 import { GitHistory } from '@/components/GitHistory';
 import { DrawioEmbed } from '@/components/DrawioEmbed';
+import { LogViewer } from '@/components/LogViewer';
+import { SettingsModal } from '@/components/SettingsModal';
 
 import WorkflowsPage from '@/app/workflows/page';
 import { Timeline } from '@/components/Timeline';
@@ -15,9 +17,10 @@ import { useProject } from '@/context/ProjectContext';
 type Tab = 'tasks' | 'architectures' | 'workflow' | 'timeline';
 
 export default function Home() {
-  const { tasksData, isRunning, projectPath } = useProject();
+  const { tasksData, isRunning, projectPath, activeRun, viewingLogsTaskId, setViewingLogsTaskId } = useProject();
   const [activeTab, setActiveTab] = useState<Tab>('tasks');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const tabs: { id: Tab; label: string }[] = [{ id: 'tasks', label: 'Backlog' }, { id: 'architectures', label: 'Architectures' }, { id: 'workflow', label: 'Workflow' }, { id: 'timeline', label: 'Timeline' }];
 
   return (
@@ -32,8 +35,30 @@ export default function Home() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            {isRunning && <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 border border-green-500/50 rounded-full"><div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" /><span className="text-sm text-green-400">Agent Running</span></div>}
+            {isRunning && (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 border border-green-500/50 rounded-full">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-sm text-green-400">Agent Running</span>
+                </div>
+                {activeRun && activeRun.taskIds.length > 0 && (
+                  <button
+                    onClick={() => setViewingLogsTaskId(activeRun.taskIds[0])}
+                    className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg border border-gray-700 transition-colors"
+                  >
+                    View Logs
+                  </button>
+                )}
+              </div>
+            )}
             {tasksData?.project.name && <span className="text-sm text-gray-400">{tasksData.project.name}</span>}
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+              title="Settings"
+            >
+              <Settings className="w-5 h-5 text-gray-400 hover:text-white" />
+            </button>
           </div>
         </div>
         {projectPath && <div className="flex gap-1 px-6 pb-2">{tabs.map(tab => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === tab.id ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/50' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>{tab.label}</button>)}</div>}
@@ -60,6 +85,24 @@ export default function Home() {
         </main>
       </div>
       {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+
+      {/* Global Log Viewer Modal/Panel */}
+      {viewingLogsTaskId && (
+        <div className="fixed inset-y-0 right-0 w-[500px] bg-gray-900 border-l border-gray-800 shadow-2xl z-[60] flex flex-col">
+          <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-950">
+            <h3 className="font-semibold">Agent Logs</h3>
+            <button onClick={() => setViewingLogsTaskId(null)} className="p-1 hover:bg-gray-800 rounded">
+              <X className="w-5 h-5 text-gray-400" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-hidden relative">
+            <LogViewer taskId={viewingLogsTaskId} onClose={() => setViewingLogsTaskId(null)} />
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
 }
