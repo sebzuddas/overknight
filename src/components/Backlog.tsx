@@ -257,6 +257,9 @@ function TaskItem({
     const [editAgent, setEditAgent] = useState(task.agent || '');
     const [workflows, setWorkflows] = useState<Workflow[]>([]);
 
+    // Overnight scheduling state
+    const [isScheduling, setIsScheduling] = useState(false);
+
     React.useEffect(() => {
         if (projectPath && isEditing) {
             fetch(`/api/workflows?projectPath=${encodeURIComponent(projectPath)}`)
@@ -324,6 +327,64 @@ function TaskItem({
         }
     };
 
+    const handleScheduleOvernight = async () => {
+        if (!editStartDate) {
+            alert('Please set a start time before scheduling overnight.');
+            return;
+        }
+
+        const scheduledTime = new Date(editStartDate);
+        if (scheduledTime <= new Date()) {
+            alert('Scheduled time must be in the future.');
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `Schedule "${editTitle}" for overnight execution?\n\n` +
+            `Time: ${scheduledTime.toLocaleString()}\n\n` +
+            `• Your Mac will wake from sleep at this time\n` +
+            `• The task runs regardless of whether Overknight is open\n` +
+            `• You'll be prompted for your password to enable wake scheduling`
+        );
+
+        if (!confirmed) return;
+
+        setIsScheduling(true);
+        try {
+            // First save the task
+            await handleSave();
+
+            // Then schedule via launchd
+            const response = await fetch('/api/schedule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    taskId: task.id,
+                    projectPath,
+                    scheduledTime: scheduledTime.toISOString(),
+                }),
+            });
+
+            const result = await response.json();
+
+            if (!result.success && !result.warning) {
+                throw new Error(result.error || 'Failed to schedule task');
+            }
+
+            if (result.warning) {
+                alert(result.warning);
+            } else {
+                alert('Task scheduled successfully! Your Mac will wake at the scheduled time.');
+            }
+
+            setIsEditing(false);
+        } catch (error) {
+            alert(`Scheduling failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setIsScheduling(false);
+        }
+    };
+
     const startEditing = () => {
         setIsEditing(true);
         setEditTitle(task.title);
@@ -333,6 +394,8 @@ function TaskItem({
         setEditStartDate(task.startDate ? new Date(task.startDate).toISOString().slice(0, 16) : '');
         setEditAgent(task.agent || '');
     };
+
+    const canScheduleOvernight = editStartDate && new Date(editStartDate) > new Date();
 
     if (isEditing) {
         return (
@@ -399,9 +462,19 @@ function TaskItem({
                     />
                     <label htmlFor={`workflowMandatory-${task.id}`} className="text-gray-400 text-xs">Workflow Mandatory</label>
                 </div>
-                <div className="flex gap-2">
-                    <button onClick={handleSave} className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs hover:bg-green-500/30">Save</button>
-                    <button onClick={() => setIsEditing(false)} className="px-2 py-1 bg-gray-700 text-gray-400 rounded text-xs hover:bg-gray-600">Cancel</button>
+                <div className="flex gap-2 items-center justify-between">
+                    <button
+                        onClick={handleScheduleOvernight}
+                        disabled={!canScheduleOvernight || isScheduling}
+                        className="flex items-center gap-1.5 px-2 py-1 bg-amber-500/20 text-amber-300 rounded text-xs hover:bg-amber-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        title={canScheduleOvernight ? 'Schedule for overnight execution' : 'Set a future start time first'}
+                    >
+                        🌙 {isScheduling ? 'Scheduling...' : 'Overnight'}
+                    </button>
+                    <div className="flex gap-2">
+                        <button onClick={handleSave} className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs hover:bg-green-500/30">Save</button>
+                        <button onClick={() => setIsEditing(false)} className="px-2 py-1 bg-gray-700 text-gray-400 rounded text-xs hover:bg-gray-600">Cancel</button>
+                    </div>
                 </div>
             </div>
         );
