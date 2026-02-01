@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Moon } from 'lucide-react';
 import { Task, Workflow, DEFAULT_AGENTS } from '@/lib/types';
 import { useProject } from '@/context/ProjectContext';
+import { ScheduleConfirmDialog } from './ScheduleConfirmDialog';
 
 interface TaskEditModalProps {
     task: Task;
@@ -21,6 +22,11 @@ export function TaskEditModal({ task, isOpen, onClose, onSave }: TaskEditModalPr
     const [workflowMandatory, setWorkflowMandatory] = useState(task.workflowMandatory || false);
     const [agent, setAgent] = useState(task.agent || '');
     const [workflows, setWorkflows] = useState<Workflow[]>([]);
+
+    // Overnight scheduling state
+    const [showScheduleConfirm, setShowScheduleConfirm] = useState(false);
+    const [isScheduling, setIsScheduling] = useState(false);
+    const [scheduleError, setScheduleError] = useState<string | null>(null);
 
     useEffect(() => {
         if (projectPath && isOpen) {
@@ -51,95 +57,182 @@ export function TaskEditModal({ task, isOpen, onClose, onSave }: TaskEditModalPr
         onClose();
     };
 
+    const handleScheduleOvernight = async () => {
+        if (!startDate) {
+            alert('Please set a start time before scheduling overnight.');
+            return;
+        }
+
+        const scheduledTime = new Date(startDate);
+        if (scheduledTime <= new Date()) {
+            alert('Scheduled time must be in the future.');
+            return;
+        }
+
+        setShowScheduleConfirm(true);
+    };
+
+    const handleConfirmSchedule = async () => {
+        setIsScheduling(true);
+        setScheduleError(null);
+
+        try {
+            // First save the task with updated details
+            await handleSave();
+
+            // Then schedule via launchd
+            const response = await fetch('/api/schedule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    taskId: task.id,
+                    projectPath,
+                    scheduledTime: new Date(startDate).toISOString(),
+                }),
+            });
+
+            const result = await response.json();
+
+            if (!result.success && !result.warning) {
+                throw new Error(result.error || 'Failed to schedule task');
+            }
+
+            if (result.warning) {
+                alert(result.warning);
+            }
+
+            setShowScheduleConfirm(false);
+            onClose();
+
+        } catch (error) {
+            setScheduleError(error instanceof Error ? error.message : 'Unknown error');
+        } finally {
+            setIsScheduling(false);
+        }
+    };
+
+    const canScheduleOvernight = startDate && new Date(startDate) > new Date();
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-gray-950/50">
-                    <h3 className="font-semibold text-lg text-gray-200">Edit Task</h3>
-                    <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-
-                <div className="p-6 space-y-4">
-                    <div>
-                        <label className="block text-xs font-medium text-gray-400 mb-1">Title</label>
-                        <input
-                            value={title}
-                            onChange={e => setTitle(e.target.value)}
-                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
-                            placeholder="Task Title"
-                        />
+        <>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden">
+                    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-gray-950/50">
+                        <h3 className="font-semibold text-lg text-gray-200">Edit Task</h3>
+                        <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
+                            <X className="w-5 h-5" />
+                        </button>
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-medium text-gray-400 mb-1">Description</label>
-                        <textarea
-                            value={description}
-                            onChange={e => setDescription(e.target.value)}
-                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors min-h-[100px]"
-                            placeholder="Task Description"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="p-6 space-y-4">
                         <div>
-                            <label className="block text-xs font-medium text-gray-400 mb-1">Start Time</label>
+                            <label className="block text-xs font-medium text-gray-400 mb-1">Title</label>
                             <input
-                                type="datetime-local"
-                                value={startDate}
-                                onChange={e => setStartDate(e.target.value)}
+                                value={title}
+                                onChange={e => setTitle(e.target.value)}
                                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
+                                placeholder="Task Title"
                             />
                         </div>
+
                         <div>
-                            <label className="block text-xs font-medium text-gray-400 mb-1">Agent</label>
+                            <label className="block text-xs font-medium text-gray-400 mb-1">Description</label>
+                            <textarea
+                                value={description}
+                                onChange={e => setDescription(e.target.value)}
+                                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors min-h-[100px]"
+                                placeholder="Task Description"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-400 mb-1">Start Time</label>
+                                <input
+                                    type="datetime-local"
+                                    value={startDate}
+                                    onChange={e => setStartDate(e.target.value)}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-400 mb-1">Agent</label>
+                                <select
+                                    value={agent}
+                                    onChange={e => setAgent(e.target.value)}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors appearance-none"
+                                >
+                                    <option value="">Default Agent</option>
+                                    {DEFAULT_AGENTS.map(a => (
+                                        <option key={a.name} value={a.name}>{a.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-medium text-gray-400 mb-1">Workflow</label>
                             <select
-                                value={agent}
-                                onChange={e => setAgent(e.target.value)}
+                                value={workflowId}
+                                onChange={e => setWorkflowId(e.target.value)}
                                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors appearance-none"
                             >
-                                <option value="">Default Agent</option>
-                                {DEFAULT_AGENTS.map(a => (
-                                    <option key={a.name} value={a.name}>{a.name}</option>
+                                <option value="">Default Workflow</option>
+                                {workflows.map(wf => (
+                                    <option key={wf.id} value={wf.id}>
+                                        {wf.title}{wf.isDefault ? ' (Default)' : ''}
+                                    </option>
                                 ))}
                             </select>
                         </div>
+
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="workflowMandatory"
+                                checked={workflowMandatory}
+                                onChange={e => setWorkflowMandatory(e.target.checked)}
+                                className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-indigo-500 focus:ring-indigo-500"
+                            />
+                            <label htmlFor="workflowMandatory" className="text-sm text-gray-400">Workflow Mandatory</label>
+                        </div>
+
+                        {/* Schedule Error */}
+                        {scheduleError && (
+                            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-sm">
+                                {scheduleError}
+                            </div>
+                        )}
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-medium text-gray-400 mb-1">Workflow</label>
-                        <select
-                            value={workflowId}
-                            onChange={e => setWorkflowId(e.target.value)}
-                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors appearance-none"
+                    <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-800 bg-gray-950/30">
+                        <button
+                            onClick={handleScheduleOvernight}
+                            disabled={!canScheduleOvernight}
+                            className="flex items-center gap-2 px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={canScheduleOvernight ? 'Schedule for overnight execution' : 'Set a future start time first'}
                         >
-                            <option value="">Default Workflow</option>
-                            {workflows.map(wf => (
-                                <option key={wf.id} value={wf.id}>
-                                    {wf.title}{wf.isDefault ? ' (Default)' : ''}
-                                </option>
-                            ))}
-                        </select>
+                            <Moon className="w-4 h-4" />
+                            Overnight
+                        </button>
+                        <div className="flex items-center gap-3">
+                            <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancel</button>
+                            <button onClick={handleSave} className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-indigo-500/20">Save Changes</button>
+                        </div>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="workflowMandatory"
-                            checked={workflowMandatory}
-                            onChange={e => setWorkflowMandatory(e.target.checked)}
-                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-indigo-500 focus:ring-indigo-500"
-                        />
-                        <label htmlFor="workflowMandatory" className="text-sm text-gray-400">Workflow Mandatory</label>
-                    </div>
-                </div>
-
-                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-800 bg-gray-950/30">
-                    <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancel</button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-indigo-500/20">Save Changes</button>
                 </div>
             </div>
-        </div>
+
+            {/* Overnight Schedule Confirmation Dialog */}
+            <ScheduleConfirmDialog
+                isOpen={showScheduleConfirm}
+                onClose={() => setShowScheduleConfirm(false)}
+                onConfirm={handleConfirmSchedule}
+                taskTitle={title}
+                scheduledTime={startDate ? new Date(startDate) : new Date()}
+                isLoading={isScheduling}
+            />
+        </>
     );
 }
+
