@@ -44,6 +44,19 @@
           "completedAt": "2026-01-31T20:02:53.438Z"
         },
         {
+          "id": "task-1769891282589",
+          "title": "Schedule visualisation",
+          "description": "When a subtask is not scheduled, it is dimmed, but when it is, it is bright. You can then scroll along the timeline to see when the different tasks are scheduled. They then are green when completed, they are yellow and show a loading symbol when they are working, and they are blue when they have not yet been scheduled. \nYou should be able to schedule tasks by clicking a cell on the time of a row. For example, for Epic A, task A, I should be able to click on a time on that row, and for that time to correspond to when the task is scheduled for. ",
+          "priority": 3,
+          "status": "pending",
+          "branch": null,
+          "createdAt": "2026-01-31T20:28:02.589Z",
+          "completedAt": null,
+          "workflowMandatory": false,
+          "startDate": "2026-01-31T00:00:00.000Z",
+          "endDate": "2026-01-31T01:00:00.000Z"
+        },
+        {
           "id": "task-1769703830018",
           "title": "Add a gantt chart functionality where each task can be assigned a time to build. ",
           "description": "",
@@ -117,19 +130,6 @@
           "branch": null,
           "createdAt": "2026-01-29T16:31:48.335Z",
           "completedAt": null
-        },
-        {
-          "id": "task-1769891282589",
-          "title": "Schedule visualisation",
-          "description": "When a subtask is not scheduled, it is dimmed, but when it is, it is bright. You can then scroll along the timeline to see when the different tasks are scheduled. They then are green when completed, they are yellow and show a loading symbol when they are working, and they are blue when they have not yet been scheduled. \nYou should be able to schedule tasks by clicking a cell on the time of a row. For example, for Epic A, task A, I should be able to click on a time on that row, and for that time to correspond to when the task is scheduled for. ",
-          "priority": 3,
-          "status": "pending",
-          "branch": null,
-          "createdAt": "2026-01-31T20:28:02.589Z",
-          "completedAt": null,
-          "workflowMandatory": false,
-          "startDate": "2026-01-31T00:00:00.000Z",
-          "endDate": "2026-01-31T01:00:00.000Z"
         },
         {
           "id": "task-1769891914491",
@@ -207,10 +207,10 @@
           "title": "Workflow steps need descriptions. ",
           "description": "",
           "priority": 3,
-          "status": "pending",
+          "status": "completed",
           "branch": null,
           "createdAt": "2026-01-29T19:06:06.020Z",
-          "completedAt": null
+          "completedAt": "2026-02-01T11:06:43.577Z"
         },
         {
           "id": "task-1769716171086",

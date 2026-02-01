@@ -15,7 +15,7 @@ interface ProjectContextType {
     refreshTasks: () => Promise<void>;
     refreshWorkflow: () => Promise<void>;
     refreshRuns: () => Promise<void>;
-    initializeProject: (projectName: string) => Promise<void>;
+    initializeProject: (projectName: string, agentConfig?: unknown) => Promise<void>;
     createEpic: (title: string, description?: string, priority?: number, assignee?: string) => Promise<Epic>;
     createTask: (epicId: string, title: string, description?: string, priority?: number, startDate?: string, endDate?: string, assignee?: string) => Promise<Task>;
     updateEpic: (epicId: string, updates: Partial<Epic>) => Promise<void>;
@@ -59,7 +59,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     const fetchData = useCallback(async (endpoint: string) => {
         if (!projectPath) return null;
         const res = await fetch(`${endpoint}?projectPath=${encodeURIComponent(projectPath)}`);
-        if (!res.ok) throw new Error(`Failed to fetch ${endpoint}`);
+        if (!res.ok) {
+            let errorMessage = `Failed to fetch ${endpoint}`;
+            try {
+                const errorData = await res.json();
+                if (errorData.error) errorMessage = errorData.error;
+            } catch { /* ignore parsing error */ }
+            throw new Error(errorMessage);
+        }
         return res.json();
     }, [projectPath]);
 
@@ -113,7 +120,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         return res.json();
     }, [projectPath]);
 
-    const initializeProject = useCallback(async (projectName: string) => { await post('/api/tasks', 'initialize', { projectName }); await refreshTasks(); refreshWorkflow(); }, [post, refreshTasks, refreshWorkflow]);
+    const initializeProject = useCallback(async (projectName: string, agentConfig?: unknown) => { await post('/api/tasks', 'initialize', { projectName, agentConfig }); await refreshTasks(); refreshWorkflow(); }, [post, refreshTasks, refreshWorkflow]);
     const createEpic = useCallback(async (title: string, description?: string, priority?: number, assignee?: string) => { const epic = await post('/api/tasks', 'createEpic', { title, description, priority, assignee }); await refreshTasks(); return epic; }, [post, refreshTasks]);
     const createTask = useCallback(async (epicId: string, title: string, description?: string, priority?: number, startDate?: string, endDate?: string, assignee?: string) => { const task = await post('/api/tasks', 'createTask', { epicId, title, description, priority, startDate, endDate, assignee }); await refreshTasks(); return task; }, [post, refreshTasks]);
     const updateEpic = useCallback(async (epicId: string, updates: Partial<Epic>) => { await post('/api/tasks', 'updateEpic', { epicId, updates }); await refreshTasks(); }, [post, refreshTasks]);

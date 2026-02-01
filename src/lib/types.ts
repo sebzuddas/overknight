@@ -52,6 +52,8 @@ export interface WorkflowStep {
   agentId?: string;
   skill?: string;
   mcpId?: string;
+  inputSchema?: Record<string, any>; // JSON Schema object for UI generation
+  params?: Record<string, any>; // The actual values for the schema (e.g. model, temperature)
 }
 
 export interface WorkflowPermissions {

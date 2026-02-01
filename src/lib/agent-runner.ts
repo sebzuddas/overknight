@@ -55,10 +55,15 @@ export class AgentRunner {
         }
 
         const agentToUseName = task.agent || workflow.agent || DEFAULT_AGENTS[0].name;
-        const agentConfig = this.availableAgents.find(a => a.name === agentToUseName);
+        let agentConfig = this.availableAgents.find(a => a.name === agentToUseName);
 
         if (!agentConfig) {
             return { success: false, branch: '', commitHash: null, steps: [], error: `Agent "${agentToUseName}" not found.` };
+        }
+
+        // Override command if this is the project's selected agent
+        if (workflow.agent === agentToUseName && workflow.agentCommand) {
+            agentConfig = { ...agentConfig, command: workflow.agentCommand };
         }
 
         await this.gitManager.initIfNeeded();
@@ -119,6 +124,13 @@ export class AgentRunner {
 
 # Workflow Step: ${step.name}
 ${step.prompt}
+
+${step.params && Object.keys(step.params).length > 0 ? `
+# Additional Configuration
+${Object.entries(step.params)
+                    .filter(([k]) => k !== 'prompt') // exclude prompt as it is already above
+                    .map(([k, v]) => `- ${k}: ${v}`).join('\n')}
+` : ''}
 
 # Instructions
 1. Focus only on this specific step

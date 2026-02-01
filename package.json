@@ -26,7 +26,8 @@
     "simple-git": "^3.30.0",
     "tree-kill": "^1.2.2",
     "web-streams-polyfill": "^4.2.0",
-    "whatwg-fetch": "^3.6.20"
+    "whatwg-fetch": "^3.6.20",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

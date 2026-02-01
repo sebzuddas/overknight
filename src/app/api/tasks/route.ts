@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const projectPath = request.nextUrl.searchParams.get('projectPath');
     if (!projectPath || !(await isValidProject(projectPath))) return NextResponse.json({ error: 'Invalid project path' }, { status: 400 });
     const tasks = await readTasks(projectPath);
-    if (!tasks) return NextResponse.json({ project: { name: '', path: projectPath, createdAt: '', lastModified: '' }, epics: [] });
+    if (!tasks) return NextResponse.json({ error: 'Project not initialized' }, { status: 404 });
     return NextResponse.json(tasks);
 }
 
@@ -22,25 +22,61 @@ export async function POST(request: NextRequest) {
 
     let tasksData = await readTasks(projectPath);
 
-    // Auto-initialize if missing
-    if (!tasksData) {
-        if (action === 'initialize') {
-            await initializeProject(projectPath, data.projectName, DEFAULT_WORKFLOW_STEPS);
-            return NextResponse.json(await readTasks(projectPath));
-        }
-
-        // Implicit initialization for other actions
-        const projectName = projectPath.split('/').pop() || 'Project';
-        await initializeProject(projectPath, projectName, DEFAULT_WORKFLOW_STEPS);
-        tasksData = await readTasks(projectPath);
-
+    if (action === 'initialize') {
         if (!tasksData) {
-            return NextResponse.json({ error: 'Failed to initialize project' }, { status: 500 });
+            await initializeProject(projectPath, data.projectName, DEFAULT_WORKFLOW_STEPS, data.agentConfig);
+
+            // Create Onboarding Epic & Tasks
+            const now = new Date().toISOString();
+            tasksData = await readTasks(projectPath);
+            if (tasksData) {
+                const onboardingTasks: Task[] = [
+                    {
+                        id: `task-arch-${Date.now()}`,
+                        title: 'Generate System Architecture',
+                        description: 'Analyze the codebase and create architecture diagrams in docs/architectures. Use mermaid or markdown.',
+                        priority: 1,
+                        status: 'pending',
+                        branch: null,
+                        createdAt: now,
+                        completedAt: null,
+                        agent: data.agentConfig?.name
+                    },
+                    {
+                        id: `task-roadmap-${Date.now()}`,
+                        title: 'Draft Initial Roadmap',
+                        description: 'Analyze the codebase and create a list of epics for future development in plan/roadmap.md.',
+                        priority: 1,
+                        status: 'pending',
+                        branch: null,
+                        createdAt: now,
+                        completedAt: null,
+                        agent: data.agentConfig?.name
+                    }
+                ];
+
+                tasksData.epics.push({
+                    id: `epic-onboarding-${Date.now()}`,
+                    title: 'Project Onboarding',
+                    description: 'Initial setup and analysis tasks',
+                    priority: 1,
+                    status: 'pending',
+                    tasks: onboardingTasks,
+                    createdAt: now
+                });
+
+                await writeTasks(projectPath, tasksData);
+
+                // Trigger execution immediately
+                getOrCreateScheduler(projectPath).runNow(onboardingTasks.map(t => t.id)).catch(console.error);
+            }
+            return NextResponse.json(await readTasks(projectPath));
+        } else {
+            return NextResponse.json(tasksData);
         }
-    } else if (action === 'initialize') {
-        // Already initialized, just return data
-        return NextResponse.json(tasksData);
     }
+
+    if (!tasksData) return NextResponse.json({ error: 'Project not initialized' }, { status: 400 });
 
     switch (action) {
         case 'createEpic': {

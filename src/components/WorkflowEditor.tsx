@@ -5,6 +5,8 @@ import { Settings, GripVertical, Plus, Trash2, ToggleLeft, ToggleRight, Terminal
 import { useProject } from '@/context/ProjectContext';
 import type { WorkflowStep } from '@/lib/types';
 import { DEFAULT_AGENTS } from '@/lib/types';
+import { AgentTaskSchemas } from '@/lib/schemas';
+import { DynamicForm } from './DynamicForm';
 
 
 export function WorkflowEditor() {
@@ -46,7 +48,7 @@ export function WorkflowEditor() {
     };
 
     const handleToggleStep = (stepId: string) => setSteps(steps.map(s => s.id === stepId ? { ...s, enabled: !s.enabled } : s));
-    const handleUpdateStepPrompt = (stepId: string, prompt: string) => setSteps(steps.map(s => s.id === stepId ? { ...s, prompt } : s));
+
 
     const handleAddStep = () => {
         if (!newStepName.trim()) return;
@@ -125,7 +127,18 @@ export function WorkflowEditor() {
                             <button onClick={() => setEditingStep(editingStep === step.id ? null : step.id)} className="text-xs text-gray-400 hover:text-white">{editingStep === step.id ? 'Close' : 'Edit'}</button>
                             <button onClick={() => handleRemoveStep(step.id)} className="p-1 hover:bg-red-500/20 rounded"><Trash2 className="w-4 h-4 text-red-400" /></button>
                         </div>
-                        {editingStep === step.id && <div className="mt-3"><textarea value={step.prompt} onChange={e => handleUpdateStepPrompt(step.id, e.target.value)} className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm font-mono" rows={4} /></div>}
+                        {editingStep === step.id && (
+                            <div className="mt-3">
+                                <label className="block text-xs font-medium text-gray-400 mb-2">Step Configuration</label>
+                                <DynamicForm
+                                    schema={AgentTaskSchemas['default']}
+                                    values={{ ...step.params, prompt: step.prompt }}
+                                    onChange={(vals) => {
+                                        setSteps(steps.map(s => s.id === step.id ? { ...s, prompt: vals.prompt, params: vals } : s));
+                                    }}
+                                />
+                            </div>
+                        )}
                     </div>
                 ))}
                 {isAddingStep ? (

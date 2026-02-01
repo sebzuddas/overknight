@@ -159,9 +159,13 @@ export async function isValidProject(projectPath: string): Promise<boolean> {
     }
 }
 
-export async function initializeProject(projectPath: string, projectName: string, defaultSteps: typeof DEFAULT_WORKFLOW_STEPS): Promise<void> {
+export async function initializeProject(projectPath: string, projectName: string, defaultSteps: typeof DEFAULT_WORKFLOW_STEPS, agentConfig?: unknown): Promise<void> {
     await ensureProjectStructure(projectPath);
     const now = new Date().toISOString();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const config = agentConfig as any;
+
     await writeTasks(projectPath, { project: { name: projectName, path: projectPath, createdAt: now, lastModified: now }, epics: [] });
     await writeWorkflow(projectPath, {
         id: 'default',
@@ -169,7 +173,8 @@ export async function initializeProject(projectPath: string, projectName: string
         description: 'Standard workflow',
         isDefault: true,
         steps: defaultSteps,
-        agentCommand: 'claude -p "{{prompt}}"',
+        agentCommand: config?.command || 'claude -p "{{prompt}}"',
+        agent: config?.name || 'Claude Code',
         workingDirectory: projectPath,
         permissions: { allowShell: true, allowGit: true, requireApproval: false }
     });
